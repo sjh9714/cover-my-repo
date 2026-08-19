@@ -55,7 +55,8 @@ step. Quality comes from following the numbers below exactly.
   names. Default: the repo's primary-language color, darkened until it
   passes 4.5:1 contrast against the background (`check_card.py`
   verifies). No primary language (docs repos): use a brand color the
-  user names, or slate `#46627F` in one-shot runs.
+  user names, or slate `#46627F` in one-shot runs. For brand colors
+  read `references/brand-accent.md`.
 - Fonts only from Google Fonts: Fraunces, IBM Plex Mono, Noto Sans KR/JP/SC.
   Real fallback stacks always.
 - Title size by name length: <=9 chars 132px, <=14 108px, <=20 92px,
