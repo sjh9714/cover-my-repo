@@ -33,6 +33,9 @@ codex plugin add repo-cover@repo-cover
 
 # Pi
 pi install https://github.com/sjh9714/repo-cover
+
+# fx (vercel-labs/fx)
+/skills install sjh9714/repo-cover --skill repo-cover
 ```
 
 Then, in your repo:
