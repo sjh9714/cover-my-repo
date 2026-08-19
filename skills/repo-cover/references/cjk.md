@@ -6,7 +6,7 @@ are ASCII); full-CJK titles also work.
 
 ## Font stacks
 
-- Korean: `'Noto Sans KR', sans-serif` — already in the default embed.
+- Korean: `'Noto Sans KR', sans-serif`, already in the default embed.
 - Japanese: swap the Google Fonts family to `Noto+Sans+JP`.
 - Chinese: `Noto+Sans+SC` (or TC). Load only the family you need.
 - Titles stay Fraunces for Latin names. A CJK repo name renders in the
@@ -22,7 +22,7 @@ are ASCII); full-CJK titles also work.
 - Never letter-space CJK body text. The mono eyebrow may stay spaced
   only if it is ASCII.
 - Character budget: 60 per card (vs 110 Latin). Two lines max still.
-- Punctuation: use the language's own marks (。 、 ·) — do not swap
+- Punctuation: use the language's own marks (。 、 ·). Do not swap
   them for Latin periods.
 
 ## Verification

@@ -45,10 +45,10 @@ pi install https://github.com/sjh9714/repo-cover
 
 | | |
 |---|---|
-| **editorial** (기본) — 따뜻한 종이색, Fraunces 워드마크, 모서리에서 번지는 동심원 | ![editorial](skills/repo-cover/assets/examples/editorial-red-handed.png) |
-| **poster** — 언어 색을 섞어 만든 딥 컬러 필드, 레포 첫 글자를 크롭한 워터마크 | ![poster](skills/repo-cover/assets/examples/poster-openlogi.png) |
-| **blueprint** — 네이비 그리드, 모노 타입, 코너 틱, 레포 이름에서 유도한 도면 번호 | ![blueprint](skills/repo-cover/assets/examples/blueprint-macos-harness.png) |
-| **gallery** — 미술관 벽 라벨. 순백, 중앙 정렬, 가는 세리프 | ![gallery](skills/repo-cover/assets/examples/gallery-cumora.png) |
+| **editorial** (기본). 따뜻한 종이색, Fraunces 워드마크, 모서리에서 번지는 동심원 | ![editorial](skills/repo-cover/assets/examples/editorial-red-handed.png) |
+| **poster**. 언어 색을 섞어 만든 딥 컬러 필드, 레포 첫 글자를 크롭한 워터마크 | ![poster](skills/repo-cover/assets/examples/poster-openlogi.png) |
+| **blueprint**. 네이비 그리드, 모노 타입, 코너 틱, 레포 이름에서 유도한 도면 번호 | ![blueprint](skills/repo-cover/assets/examples/blueprint-macos-harness.png) |
+| **gallery**. 미술관 벽 라벨. 순백, 중앙 정렬, 가는 세리프 | ![gallery](skills/repo-cover/assets/examples/gallery-cumora.png) |
 
 카드 두 장이 같아지는 일은 없습니다. 악센트는 주 언어에서, 동심원과
 도면 번호는 레포 이름 해시에서, 포스터 워터마크는 레포 자신의
@@ -63,7 +63,7 @@ pi install https://github.com/sjh9714/repo-cover
 - 이름 길이별 제목 크기 티어 (132px에서 64px까지, 26자 초과는 두 줄)
 - 설명 110자 예산 (CJK는 60자), 최대 두 줄
 - 그림자, 그라데이션, 글래스모피즘, 이모지 금지
-- 스타 수는 **기본 꺼짐** — 금방 낡고, 어린 레포를 민망하게 만듭니다
+- 스타 수는 **기본 꺼짐**. 금방 낡고, 어린 레포를 민망하게 만듭니다
 
 `scripts/check_card.py`가 전부 결정적으로 검사합니다. 캔버스 크기,
 자기완결성, 대비, CJK 줄바꿈, X의 506px 카드 폭 축소 가독성까지.

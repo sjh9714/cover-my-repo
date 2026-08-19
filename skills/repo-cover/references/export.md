@@ -3,7 +3,7 @@
 ## PNG
 
 The card is already exact at 1280x640. Rasterize with the Chrome the
-user already has — no dependency:
+user already has, with no dependency.
 
 ```sh
 # macOS
@@ -36,6 +36,6 @@ or the title under 64px for long names.
 ## Keeping it fresh (bundled GitHub Action)
 
 The card is static by design. If the repo's description changes, or the
-user wants scheduled re-renders, the repo ships `action.yml` — a
+user wants scheduled re-renders, the repo ships `action.yml`, a
 composite Action that re-screenshots the committed card HTML in CI.
 See the README "Keep it fresh" section for the copy-paste workflow.

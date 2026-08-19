@@ -1,13 +1,13 @@
 # repo-cover
 
-**Your repo's social preview, designed like a magazine masthead — written
+**Your repo's social preview, designed like a magazine masthead, written
 by your coding agent as one self-contained HTML file.**
 
 Every link to your repo on X, Slack, or Discord shows a card. Right now
 yours is either GitHub's auto-generated default or a generator template
 that looks like everyone else's. This skill has your agent *design* the
-card instead: real typographic hierarchy, one accent color taken from
-your language, and deterministic checks that keep the model honest.
+card instead, with real typographic hierarchy, an accent color taken
+from your language, and deterministic checks that keep the model honest.
 
 [한국어](README.ko.md)
 
@@ -45,12 +45,12 @@ you upload under **Settings → Social preview**.
 
 | | |
 |---|---|
-| **editorial** (default) — warm paper, Fraunces wordmark, arcs from the corner | ![editorial](skills/repo-cover/assets/examples/editorial-red-handed.png) |
-| **poster** — a deep field mixed from your language color, your first letter as a cropped watermark | ![poster](skills/repo-cover/assets/examples/poster-openlogi.png) |
-| **blueprint** — navy grid, mono type, corner ticks, a plate number derived from your repo name | ![blueprint](skills/repo-cover/assets/examples/blueprint-macos-harness.png) |
-| **gallery** — a museum wall label; pure white, centered, light serif | ![gallery](skills/repo-cover/assets/examples/gallery-cumora.png) |
+| **editorial** (default). Warm paper, a Fraunces wordmark, arcs from the corner | ![editorial](skills/repo-cover/assets/examples/editorial-red-handed.png) |
+| **poster**. A deep field mixed from your language color, your first letter as a cropped watermark | ![poster](skills/repo-cover/assets/examples/poster-openlogi.png) |
+| **blueprint**. Navy grid, mono type, corner ticks, a plate number derived from your repo name | ![blueprint](skills/repo-cover/assets/examples/blueprint-macos-harness.png) |
+| **gallery**. A museum wall label. Pure white, centered, light serif | ![gallery](skills/repo-cover/assets/examples/gallery-cumora.png) |
 
-No two cards match: the accent comes from your primary language, the
+No two cards match. The accent comes from your primary language, the
 arcs and plate numbers are seeded by your repo name, and the poster
 watermark is your own letterform.
 
@@ -63,11 +63,11 @@ The model does not freestyle. The skill pins:
 - title size tiers by name length (132px down to 64px, two lines past 26 chars)
 - a 110-character description budget (60 for CJK), two lines max
 - no shadows, no gradients, no glassmorphism, no emoji
-- star counts **off by default** — they go stale and embarrass young repos
+- star counts **off by default**, since they go stale and embarrass young repos
 
-`scripts/check_card.py` verifies all of it deterministically: canvas
-size, self-containment, contrast ratios, CJK line-breaking, downscale
-legibility at X's 506px card width. FAILs get repaired, twice, then
+`scripts/check_card.py` verifies it all deterministically. It checks
+canvas size, self-containment, contrast ratios, CJK line-breaking, and
+downscale legibility at X's 506px card width. FAILs get repaired, twice, then
 reported honestly.
 
 ## CJK is first-class
@@ -75,7 +75,7 @@ reported honestly.
 ![Korean example](skills/repo-cover/assets/examples/editorial-korean.png)
 
 Korean gets `word-break:keep-all`, a +1px optical bump, and Noto Sans KR
-— not a tofu fallback. Japanese and Chinese swap in Noto Sans JP/SC with
+instead of a tofu fallback. Japanese and Chinese swap in Noto Sans JP/SC with
 their own line-breaking rules. See `references/cjk.md`.
 
 ## Keep it fresh
@@ -93,9 +93,9 @@ run on a schedule if your description changes often:
 
 ## When not to use this
 
-- You want diagrams or charts — use a diagram skill.
-- You want a logo or mascot — use an image-generation skill.
-- Your repo is private and nothing ever links to it — the default
+- You want diagrams or charts. Use a diagram skill.
+- You want a logo or mascot. Use an image-generation skill.
+- Your repo is private and nothing ever links to it. The default
   card is fine, save the tokens.
 
 ## License

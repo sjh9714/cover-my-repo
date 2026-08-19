@@ -12,7 +12,7 @@ license: MIT
 # repo-cover
 
 You design one 1280x640 social-preview card as a single self-contained HTML
-file. You write the HTML yourself — there is no image model and no build
+file. You write the HTML yourself. There is no image model and no build
 step. Quality comes from following the numbers below exactly.
 
 ## Workflow
@@ -52,13 +52,13 @@ step. Quality comes from following the numbers below exactly.
   Real fallback stacks always.
 - Title size by name length: <=9 chars 132px, <=14 108px, <=20 92px,
   <=26 74px, longer 64px and allow two lines broken at a hyphen.
-- Description: max 2 lines. No mid-word hyphen breaks — wrap compound
+- Description: max 2 lines. No mid-word hyphen breaks. Wrap compound
   words in `white-space:nowrap` spans.
 - Star counts are OFF by default. They go stale and embarrass small
   repos. Only include when the user explicitly asks; then format with
   thousands separators.
 - Owner avatar is optional. If used, inline it as a base64 data URI
-  (`references/avatar.md`) — the file must stay self-contained.
+  (`references/avatar.md`) so the file stays self-contained.
 - Never: box-shadow, drop-shadow, glassmorphism, gradients (except the
   blueprint grid lines), emoji, more than 2 typefaces + 1 mono, dark
   background with neon cyan glow, centered Inter on a purple gradient.

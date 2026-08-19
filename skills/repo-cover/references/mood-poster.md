@@ -1,8 +1,8 @@
 # Mood: poster
 
 A deep color field built from the repo's own accent, cream type, and the
-repo's first letter as a giant cropped watermark. The loudest mood —
-gallery poster, not tech banner.
+repo's first letter as a giant cropped watermark. The loudest mood.
+Gallery poster, not tech banner.
 
 ## Tokens
 
@@ -19,17 +19,17 @@ cream = #FAF6EE                        // all type
 Copy `assets/examples/poster-archify.html`. Structure inside
 `.card { background:deep; padding:118px 88px 0; overflow:hidden }`:
 
-1. `.glyph` — first letter of the repo name, uppercase. Fraunces 600,
+1. `.glyph`, the first letter of the repo name, uppercase. Fraunces 600,
    660px, cream at opacity .07, positioned `right:-48px; bottom:-190px`
    so it crops off two edges. This is the per-repo variation: every
    repo gets a different letterform.
-2. `.eyebrow` — owner. Mono 500 15px, ls .22em, uppercase, cream at .72.
-3. `.title` — as editorial (Fraunces 560, opsz 144) but cream, with the
+2. `.eyebrow`, the owner. Mono 500 15px, ls .22em, uppercase, cream at .72.
+3. `.title`, as editorial (Fraunces 560, opsz 144) but cream, with the
    accent period in `lift`.
-4. `.desc` — 29px/1.5, cream at .78, max-width 640px, margin-top 34px.
+4. `.desc`, 29px/1.5, cream at .78, max-width 640px, margin-top 34px.
    Keep it to 2 lines; if it wraps to 3, cut words from the line, not
    the font size.
-5. `.meta` — bottom strip at `bottom:64px`, border-top
+5. `.meta`, the bottom strip at `bottom:64px`, border-top
    `rgba(250,246,238,.22)`, cream at .85, meta dot in `lift`.
 
 ## Rules
