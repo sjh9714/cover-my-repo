@@ -18,12 +18,14 @@ step. Quality comes from following the numbers below exactly.
 ## Workflow
 
 1. **Gather facts.** From the target repo: owner, name, description,
-   primary language, license. Prefer `gh api repos/<owner>/<name>` or the
-   local checkout. Never invent a star count or license.
+   primary language, license (use the `spdx_id`). Prefer
+   `gh api repos/<owner>/<name>` or the local checkout. Never invent a
+   star count or license.
 2. **Rewrite the description.** The card line is not the GitHub description
    verbatim. Compress it to one or two sentences, max 110 characters
    (CJK: max 60 characters), concrete nouns, no marketing adjectives.
-   Show the user your line before rendering if they are present.
+   Show the user your line before rendering if they are present; in a
+   non-interactive run, proceed and include the line in your report.
 3. **Pick a mood.** Default `editorial`. Offer the other three only if the
    user asks for options. Read exactly ONE mood reference and ONE example:
    - `references/mood-editorial.md` + `assets/examples/editorial-red-handed.html`
@@ -44,10 +46,13 @@ step. Quality comes from following the numbers below exactly.
 ## Hard rules (all moods)
 
 - Canvas exactly 1280x640. Margins 88px (blueprint: 96px).
-- Every coordinate and size on a 4px grid.
-- ONE accent color per card. Default: the repo's primary-language color,
-  darkened until it passes 4.5:1 contrast against the background
-  (`check_card.py` verifies). The accent appears at most 3 times.
+- Follow the mood reference's numbers exactly. When you invent a
+  coordinate the reference does not give, snap it to a 4px grid.
+- ONE accent color per card, used only in the places the mood reference
+  names. Default: the repo's primary-language color, darkened until it
+  passes 4.5:1 contrast against the background (`check_card.py`
+  verifies). No primary language (docs repos): use a brand color the
+  user names, or slate `#46627F` in one-shot runs.
 - Fonts only from Google Fonts: Fraunces, IBM Plex Mono, Noto Sans KR/JP/SC.
   Real fallback stacks always.
 - Title size by name length: <=9 chars 132px, <=14 108px, <=20 92px,
@@ -57,6 +62,8 @@ step. Quality comes from following the numbers below exactly.
 - Star counts are OFF by default. They go stale and embarrass small
   repos. Only include when the user explicitly asks; then format with
   thousands separators.
+- Meta row fallback: show what exists (language, license). If both are
+  missing, the single item is the repo URL without protocol.
 - Owner avatar is optional. If used, inline it as a base64 data URI
   (`references/avatar.md`) so the file stays self-contained.
 - Never: box-shadow, drop-shadow, glassmorphism, gradients (except the

@@ -26,7 +26,8 @@ Copy `assets/examples/blueprint-macos-harness.html`. Inside
 3. Four `.corner` SVG ticks (24px L-shapes) rotated into each corner at
    inset 28px.
 4. `.eyebrow`, flex space-between. Owner on the left, `PLATE NNN` on
-   the right. NNN = hash of the repo name % 900 + 100. Mono 500 15px,
+   the right. NNN = hash % 900 + 100, where hash = the first 8 hex
+   digits of sha256(repo name) read as an integer. Mono 500 15px,
    ls .22em, uppercase, `dim`.
 5. `.title`, mono 600, UPPERCASE, size = min(name-length table, 88px),
    letter-spacing .01em, line-height 1.1, `text`. Ends with

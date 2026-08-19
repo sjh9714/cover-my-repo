@@ -10,7 +10,7 @@ user already has, with no dependency.
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
   --headless=new --disable-gpu --hide-scrollbars \
   --window-size=1280,640 --virtual-time-budget=9000 \
-  --screenshot=cover.png "file://$PWD/<repo>-cover.html"
+  --screenshot=<repo>-cover.png "file://$PWD/<repo>-cover.html"
 # Linux: replace the binary with google-chrome or chromium
 ```
 

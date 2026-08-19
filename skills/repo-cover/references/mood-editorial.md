@@ -36,9 +36,10 @@ Structure, top to bottom, all inside `.card { padding:118px 88px 0 }`:
 
 SVG 420x420 pinned to the card's bottom-right corner, behind the meta
 strip. 4-6 `<circle>` centered at (420,420), stroke accent 2px, no fill.
-Vary per repo so two cards never match: derive arc count (4 + hash % 3)
-and radius step (56 + hash % 14, starting at r=84) from a hash of the
-repo name. Opacities from the outside in: .5 .36 .26 .17 .11 .07.
+Vary per repo so two cards never match: hash = the first 8 hex digits
+of sha256(repo name) read as an integer. Arc count = 4 + hash % 3,
+radius step = 56 + hash % 14, starting at r=84. Opacities from the
+innermost circle (smallest radius) outward: .5 .36 .26 .17 .11 .07.
 No solid dot on the arcs. The title period is the single focal accent.
 
 ## Avatar (optional)

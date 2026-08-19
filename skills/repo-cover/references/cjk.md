@@ -22,8 +22,9 @@ are ASCII); full-CJK titles also work.
 - Never letter-space CJK body text. The mono eyebrow may stay spaced
   only if it is ASCII.
 - Character budget: 60 per card (vs 110 Latin). Two lines max still.
-- Punctuation: use the language's own marks (。 、 ·). Do not swap
-  them for Latin periods.
+- Punctuation: Japanese and Chinese use their own marks (。 、 ·). Do
+  not swap them for Latin periods. Korean orthography uses the Latin
+  period and comma; do not force 。 into Korean text.
 
 ## Verification
 
