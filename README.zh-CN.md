@@ -10,9 +10,9 @@
 
 [English](README.md) | [한국어](README.ko.md) | [日本語](README.ja.md)
 
-![四种风格动画](docs/demo.gif)
+![风格演示](docs/demo.gif)
 
-![四种风格](docs/hero.png)
+![风格网格](docs/hero.png)
 
 ![前后对比](docs/compare.png)
 

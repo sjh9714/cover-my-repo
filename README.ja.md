@@ -11,9 +11,9 @@ X や Slack、Discord にリポジトリのリンクを貼るたびにカード�
 
 [English](README.md) | [한국어](README.ko.md) | [简体中文](README.zh-CN.md)
 
-![Four moods, animated](docs/demo.gif)
+![ムードのデモ](docs/demo.gif)
 
-![Four moods](docs/hero.png)
+![ムードグリッド](docs/hero.png)
 
 ![Before and after](docs/compare.png)
 

@@ -1,6 +1,6 @@
 {
   "name": "repo-cover",
-  "description": "Design GitHub social-preview cards (og:image, 1280x640) as one self-contained HTML file. Four editorial moods (editorial, poster, blueprint, gallery), CJK-first typography, deterministic design checks, crisp PNG export, and a bundled GitHub Action that keeps the card fresh. Use for a repo cover, social preview, opengraph image, link card, or README hero.",
+  "description": "Design GitHub social-preview cards (og:image, 1280x640) as one self-contained HTML file. Five moods (editorial, poster, blueprint, gallery, terminal), CJK-first typography, deterministic design checks, crisp PNG export, and a bundled GitHub Action that keeps the card fresh. Use for a repo cover, social preview, opengraph image, link card, or README hero.",
   "version": "1.0.0",
   "author": {
     "name": "sjh9714",
