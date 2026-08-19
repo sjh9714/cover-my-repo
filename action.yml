@@ -1,7 +1,7 @@
 name: repo-cover-render
-description: >
-  Re-render a repo-cover card HTML to PNG in CI, so the social preview
-  never ships with fallback fonts and stays fresh on a schedule.
+description: >-
+  Render a repo-cover card HTML to a 1280x640 PNG in CI with headless
+  Chrome, so the social preview stays crisp and fresh.
 branding:
   icon: image
   color: red
