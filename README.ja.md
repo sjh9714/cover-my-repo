@@ -9,7 +9,7 @@ X や Slack、Discord にリポジトリのリンクを貼るたびにカード�
 ント自身にカードを設計させます。本物のタイポグラフィ階層、言語カラー
 から取ったアクセント 1 色、そしてモデルの暴走を止める決定的チェック。
 
-[English](README.md) | [한국어](README.ko.md)
+[English](README.md) | [한국어](README.ko.md) | [简体中文](README.zh-CN.md)
 
 ![Four moods, animated](docs/demo.gif)
 

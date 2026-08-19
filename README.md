@@ -9,7 +9,7 @@ that looks like everyone else's. This skill has your agent *design* the
 card instead, with real typographic hierarchy, an accent color taken
 from your language, and deterministic checks that keep the model honest.
 
-[한국어](README.ko.md) | [日本語](README.ja.md)
+[한국어](README.ko.md) | [日本語](README.ja.md) | [简体中文](README.zh-CN.md)
 
 ![Four moods, animated](docs/demo.gif)
 
