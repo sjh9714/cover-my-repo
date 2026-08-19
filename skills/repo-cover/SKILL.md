@@ -32,6 +32,7 @@ step. Quality comes from following the numbers below exactly.
    - `references/mood-poster.md` + `assets/examples/poster-archify.html`
    - `references/mood-blueprint.md` + `assets/examples/blueprint-macos-harness.html`
    - `references/mood-gallery.md` + `assets/examples/gallery-cumora.html`
+   - `references/mood-terminal.md` + `assets/examples/terminal-freeze.html`
    Do not read renderer-free files "for context". Two files, then write.
    For a README hero banner instead of a card, read
    `references/banner.md` (1280x320, editorial language).

@@ -231,6 +231,45 @@ def blueprint(owner, name, desc, accent, metas):
 </div></body></html>"""
 
 
+# ---------------------------------------------------------------- terminal
+def terminal(owner, name, desc, accent, metas):
+    bg, frame, bar = "#16181D", "#23262D", "#1D2026"
+    text, dim = "#E6E3DC", "#8B8F98"
+    meta_line = " · ".join(metas) if metas else ""
+    css = f"""
+.card{{position:relative;width:1280px;height:640px;background:{bg};
+  padding:72px 96px;font-family:'IBM Plex Mono',monospace}}
+.win{{position:absolute;inset:72px 96px;background:{bar};border:1px solid {frame};
+  border-radius:10px;overflow:hidden}}
+.bar{{height:44px;background:{frame};display:flex;align-items:center;padding:0 18px;gap:8px}}
+.dot{{width:12px;height:12px;border-radius:50%;background:#3A3E46}}
+.bar .wtitle{{margin:0 auto;font:400 13px/1 'IBM Plex Mono',monospace;color:{dim};
+  letter-spacing:.08em}}
+.body{{padding:44px 48px 0}}
+.prompt{{font:400 18px/1 'IBM Plex Mono',monospace;color:{dim}}}
+.prompt .sym{{color:{accent}}}
+.title{{font-weight:600;color:{text};font-size:{min(title_size(name), 92)}px;
+  letter-spacing:-.01em;line-height:1.06;margin-top:26px}}
+.title .cursor{{display:inline-block;width:.5em;height:.9em;background:{accent};
+  vertical-align:-.08em;margin-left:10px}}
+.desc{{font:400 21px/1.7 'IBM Plex Mono',monospace;color:{dim};
+  margin-top:26px;max-width:880px}}
+.status{{position:absolute;left:48px;right:48px;bottom:32px;border-top:1px solid {frame};
+  padding-top:18px;display:flex;justify-content:space-between;
+  font:400 14px/1 'IBM Plex Mono',monospace;color:{dim};letter-spacing:.1em}}
+"""
+    return head(css) + f"""<div class="card"><div class="win">
+<div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+<span class="wtitle">{owner}/{name} &mdash; zsh</span></div>
+<div class="body">
+<div class="prompt"><span class="sym">&#10095;</span> gh repo view {owner}/{name}</div>
+<h1 class="title">{name}<span class="cursor"></span></h1>
+<p class="desc">{nowrap_hyphens(desc)}</p>
+</div>
+<div class="status"><span>{meta_line.upper()}</span><span>EXIT 0</span></div>
+</div></div></body></html>"""
+
+
 # ------------------------------------------------------------------ gallery
 def gallery(owner, name, desc, accent, metas):
     css = f"""
@@ -299,6 +338,10 @@ CARDS = [
         owner="browser-use", name="macos-harness",
         desc="Drive real macOS apps from an agent loop. Accessibility-tree actions, screenshot diffing, replayable sessions.",
         accent="#5CC8FF", metas=["Python", "MIT"])),
+    ("terminal-freeze", terminal, dict(
+        owner="charmbracelet", name="freeze",
+        desc="Generate images of code and terminal output. Crisp SVG and PNG straight from your shell.",
+        accent="#C084FC", metas=["Go", "MIT"])),
     ("gallery-cumora", gallery, dict(
         owner="yetone", name="cumora",
         desc="Team chat where AI agents are first-class teammates, with private memory and real work to claim.",

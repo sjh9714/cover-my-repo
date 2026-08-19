@@ -8,7 +8,7 @@ In rough order. Open an issue to argue for reordering.
   weekly) and live in the gallery.
 - **Custom brand accents.** Already supported by the accent rule; add a
   documented recipe and an example.
-- **More moods.** Candidates people have asked about: terminal,
+- **More moods.** terminal shipped; remaining candidates:
   letterpress dark, brutalist. See CONTRIBUTING for what a mood needs.
 - **Checker hardening.** Rendered-pixel checks (text overflow measured,
   not estimated) while staying stdlib-only where possible.
