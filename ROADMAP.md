@@ -4,8 +4,8 @@ In rough order. Open an issue to argue for reordering.
 
 - [x] **README hero banners.** Shipped as the banner variant
   (`references/banner.md`, 1280x320).
-- **Japanese and Chinese examples.** The CJK rules support them; ship
-  one example each so the claim is visible.
+- [x] **Japanese and Chinese examples.** Shipped (zenn-editor, ruanyf
+  weekly) and live in the gallery.
 - **Custom brand accents.** Already supported by the accent rule; add a
   documented recipe and an example.
 - **More moods.** Candidates people have asked about: terminal,
