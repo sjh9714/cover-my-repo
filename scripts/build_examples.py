@@ -126,6 +126,36 @@ def editorial(owner, name, desc, accent, metas, avatar=None, cjk=False, lang=Non
 </div></body></html>"""
 
 
+# ------------------------------------------------------------ banner (1280x320)
+def banner(owner, name, desc, accent, metas):
+    s = seed(name)
+    n_arcs = 3 + s % 2
+    radii = [64 + i * (48 + s % 12) for i in range(n_arcs)]
+    arcs = "".join(
+        f'<circle cx="300" cy="300" r="{r}" opacity="{o}"/>'
+        for r, o in zip(radii, [.5, .3, .18, .1]))
+    css = f"""
+.card{{position:relative;width:1280px;height:320px;background:{PAPER};
+  padding:64px 72px 0;overflow:hidden}}
+.eyebrow{{font:500 13px/1 'IBM Plex Mono',monospace;letter-spacing:.22em;
+  text-transform:uppercase;color:{MUTED};display:flex;align-items:center;gap:10px}}
+.eyebrow .dot{{width:8px;height:8px;border-radius:50%;background:{accent}}}
+.title{{font-family:'Fraunces',serif;font-weight:560;color:{INK};font-size:72px;
+  letter-spacing:-.015em;line-height:1.02;margin-top:22px;font-variation-settings:'opsz' 144}}
+.title .stop{{color:{accent}}}
+.desc{{font:400 22px/1.4 'Noto Sans KR',sans-serif;color:{MUTED};
+  margin-top:16px;max-width:760px}}
+.arcs{{position:absolute;right:0;bottom:0}}
+"""
+    return head(css).replace("height:640px", "height:320px") + f"""<div class="card">
+<svg class="arcs" width="300" height="300" viewBox="0 0 300 300" fill="none">
+<g stroke="{accent}" stroke-width="2">{arcs}</g></svg>
+<div class="eyebrow"><span class="dot"></span>{owner}</div>
+<h1 class="title">{name}<span class="stop">.</span></h1>
+<p class="desc">{nowrap_hyphens(desc)}</p>
+</div></body></html>"""
+
+
 # ------------------------------------------------------------------- poster
 def poster(owner, name, desc, accent, metas):
     deep = blend(accent, "#14110D", 0.72)
@@ -253,6 +283,10 @@ CARDS = [
         owner="ruanyf", name="weekly",
         desc="科技爱好者周刊，每周五发布。记录每周值得分享的科技内容。",
         accent="#46627F", metas=["Documentation"], lang="sc")),
+    ("banner-repo-cover", banner, dict(
+        owner="sjh9714", name="repo-cover",
+        desc="Social preview cards designed by your coding agent.",
+        accent="#B3382C", metas=[])),
     ("poster-archify", poster, dict(
         owner="tt-a1i", name="archify",
         desc="Beautiful, verifiable architecture diagrams. Self-contained HTML with motion and crisp export.",

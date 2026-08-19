@@ -2,8 +2,8 @@
 
 In rough order. Open an issue to argue for reordering.
 
-- **README hero banners.** Same design system, different canvas. The
-  second surface every repo needs.
+- [x] **README hero banners.** Shipped as the banner variant
+  (`references/banner.md`, 1280x320).
 - **Japanese and Chinese examples.** The CJK rules support them; ship
   one example each so the claim is visible.
 - **Custom brand accents.** Already supported by the accent rule; add a

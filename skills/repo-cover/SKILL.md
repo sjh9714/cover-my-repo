@@ -33,6 +33,8 @@ step. Quality comes from following the numbers below exactly.
    - `references/mood-blueprint.md` + `assets/examples/blueprint-macos-harness.html`
    - `references/mood-gallery.md` + `assets/examples/gallery-cumora.html`
    Do not read renderer-free files "for context". Two files, then write.
+   For a README hero banner instead of a card, read
+   `references/banner.md` (1280x320, editorial language).
 4. **Write `<repo>-cover.html`.** Copy the example's skeleton, replace
    content, apply the mood's rules. If the description or repo name
    contains CJK text, also read `references/cjk.md` first.

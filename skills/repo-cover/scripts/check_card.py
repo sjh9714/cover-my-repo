@@ -43,9 +43,9 @@ def check(path: str) -> bool:
     def warn(msg):
         print(f"  WARN  {msg}")
 
-    # canvas
-    if "1280px" not in src or "640px" not in src:
-        fail("canvas is not 1280x640")
+    # canvas: card 1280x640 or banner 1280x320
+    if "1280px" not in src or ("640px" not in src and "320px" not in src):
+        fail("canvas is not 1280x640 or 1280x320")
 
     # self-contained: only Google Fonts may be external
     for url in re.findall(r"https?://[^\s\"'()]+", src):
