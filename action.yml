@@ -20,7 +20,8 @@ runs:
         CARD: ${{ inputs.card }}
         OUT: ${{ inputs.output }}
       run: |
-        chrome --headless=new --disable-gpu --hide-scrollbars \
+        chrome --headless=new --no-sandbox --disable-dev-shm-usage \
+          --disable-gpu --hide-scrollbars \
           --window-size=1280,640 --virtual-time-budget=9000 \
           --screenshot="$OUT" "file://$GITHUB_WORKSPACE/$CARD"
         ls -la "$OUT"

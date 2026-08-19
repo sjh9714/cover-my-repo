@@ -255,9 +255,19 @@ CARDS = [
         accent="#7266DA", metas=["TypeScript", "AGPL-3.0"])),
 ]
 
+def cached_avatar(fname: str, login: str) -> str:
+    """Reuse the data URI already checked in, so builds are deterministic."""
+    existing = OUT / f"{fname}.html"
+    if existing.exists():
+        m = re.search(r'src="(data:image/png;base64,[^"]+)"', existing.read_text())
+        if m:
+            return m.group(1)
+    return avatar_data_uri(login)
+
+
 if __name__ == "__main__":
     for fname, fn, kw in CARDS:
         if kw.get("avatar", "").startswith("@"):
-            kw["avatar"] = avatar_data_uri(kw["avatar"][1:])
+            kw["avatar"] = cached_avatar(fname, kw["avatar"][1:])
         (OUT / f"{fname}.html").write_text(fn(**kw))
         print("built", fname)
