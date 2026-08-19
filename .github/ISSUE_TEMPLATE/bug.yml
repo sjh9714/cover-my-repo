@@ -1,0 +1,23 @@
+name: Bug report
+description: The skill produced a bad card, the checker missed something, or a doc is wrong.
+labels: [bug]
+body:
+  - type: input
+    id: agent
+    attributes:
+      label: Agent and how you installed
+      placeholder: "Claude Code, npx skills add"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: The card HTML or a screenshot, the checker output, and what you expected instead.
+    validations:
+      required: true
+  - type: input
+    id: repo
+    attributes:
+      label: Target repository (if shareable)
+      placeholder: owner/repo

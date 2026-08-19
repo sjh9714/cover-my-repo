@@ -1,0 +1,44 @@
+name: Showcase a card
+description: Made a cover with repo-cover? Show it off. Good ones get featured in the gallery.
+title: "[showcase] "
+labels: [showcase]
+body:
+  - type: input
+    id: repo
+    attributes:
+      label: Repository the card is for
+      placeholder: owner/repo
+    validations:
+      required: true
+  - type: dropdown
+    id: mood
+    attributes:
+      label: Mood
+      options:
+        - editorial
+        - poster
+        - blueprint
+        - gallery
+        - custom
+    validations:
+      required: true
+  - type: input
+    id: agent
+    attributes:
+      label: Agent that wrote it
+      placeholder: Claude Code, Codex, Cursor, ...
+    validations:
+      required: true
+  - type: textarea
+    id: image
+    attributes:
+      label: The card
+      description: Drag the exported PNG here. Attach the HTML too if you can.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checker
+    attributes:
+      label: Checker
+      options:
+        - label: check_card.py passes on this card
