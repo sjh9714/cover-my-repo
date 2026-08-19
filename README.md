@@ -43,6 +43,8 @@ you upload under **Settings → Social preview**.
 
 ## Four moods
 
+Every example is a live page in the [gallery](https://sjh9714.github.io/repo-cover/). Click through and view source.
+
 | | |
 |---|---|
 | **editorial** (default). Warm paper, a Fraunces wordmark, arcs from the corner | ![editorial](skills/repo-cover/assets/examples/editorial-red-handed.png) |

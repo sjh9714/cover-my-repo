@@ -43,6 +43,8 @@ pi install https://github.com/sjh9714/repo-cover
 
 ## 네 가지 무드
 
+모든 예제는 [갤러리](https://sjh9714.github.io/repo-cover/)에서 라이브 페이지로 볼 수 있습니다.
+
 | | |
 |---|---|
 | **editorial** (기본). 따뜻한 종이색, Fraunces 워드마크, 모서리에서 번지는 동심원 | ![editorial](skills/repo-cover/assets/examples/editorial-red-handed.png) |

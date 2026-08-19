@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>repo-cover gallery</title>
+<meta property="og:title" content="repo-cover gallery">
+<meta property="og:description" content="Social preview cards designed by your coding agent. Four editorial moods, CJK-first, one self-contained HTML file.">
+<meta property="og:image" content="https://sjh9714.github.io/repo-cover/examples/editorial-repo-cover.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+KR:wght@400;500&display=swap">
+<style>
+:root{--paper:#FAF9F5;--ink:#1D1A16;--muted:#6B655C;--hair:#E3DFD7;--accent:#B3382C}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:'Noto Sans KR',sans-serif}
+.wrap{max-width:1160px;margin:0 auto;padding:72px 24px 96px}
+.eyebrow{font:500 14px/1 'IBM Plex Mono',monospace;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px}
+.eyebrow .dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+h1{font-family:'Fraunces',serif;font-weight:560;font-size:clamp(48px,8vw,84px);
+  letter-spacing:-.015em;line-height:1.05;margin-top:24px;font-variation-settings:'opsz' 144}
+h1 .stop{color:var(--accent)}
+.tagline{font-size:19px;line-height:1.6;color:var(--muted);margin-top:18px;max-width:640px}
+.install{display:inline-block;margin-top:26px;font:500 14px/1 'IBM Plex Mono',monospace;
+  border:1px solid var(--hair);padding:13px 18px;border-radius:6px;background:#fff;color:var(--ink)}
+.links{margin-top:16px;font:500 13px/1 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase}
+.links a{color:var(--accent);text-decoration:none}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:28px;margin-top:56px}
+.cardlink{display:block;text-decoration:none;color:inherit}
+.cardlink img{width:100%;display:block;border:1px solid var(--hair);border-radius:4px}
+.cap{margin-top:10px;font:500 12px/1.5 'IBM Plex Mono',monospace;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--muted)}
+.cap b{color:var(--ink);font-weight:500}
+footer{margin-top:72px;border-top:1px solid var(--hair);padding-top:20px;
+  font:500 12px/1.6 'IBM Plex Mono',monospace;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow"><span class="dot"></span>sjh9714</div>
+  <h1>repo-cover<span class="stop">.</span></h1>
+  <p class="tagline">Social preview cards designed by your coding agent.
+  Four moods, CJK-first typography, one self-contained HTML file per card.
+  Every card below is a live page. Click through and view source.</p>
+  <div class="install">npx skills add sjh9714/repo-cover</div>
+  <div class="links"><a href="https://github.com/sjh9714/repo-cover">github.com/sjh9714/repo-cover</a></div>
+
+  <div class="grid">
+    <a class="cardlink" href="examples/editorial-repo-cover.html">
+      <img src="examples/editorial-repo-cover.png" alt="editorial mood, repo-cover" loading="lazy">
+      <div class="cap"><b>editorial</b> &middot; sjh9714/repo-cover</div></a>
+    <a class="cardlink" href="examples/editorial-deepseek-harness.html">
+      <img src="examples/editorial-deepseek-harness.png" alt="editorial mood with avatar, deepseek-harness" loading="lazy">
+      <div class="cap"><b>editorial + avatar</b> &middot; deepseek-ai/deepseek-harness</div></a>
+    <a class="cardlink" href="examples/editorial-korean.html">
+      <img src="examples/editorial-korean.png" alt="editorial mood with Korean text, frontend-fundamentals" loading="lazy">
+      <div class="cap"><b>editorial + korean</b> &middot; toss/frontend-fundamentals</div></a>
+    <a class="cardlink" href="examples/editorial-red-handed.html">
+      <img src="examples/editorial-red-handed.png" alt="editorial mood, red-handed" loading="lazy">
+      <div class="cap"><b>editorial</b> &middot; sjh9714/red-handed</div></a>
+    <a class="cardlink" href="examples/poster-archify.html">
+      <img src="examples/poster-archify.png" alt="poster mood, archify" loading="lazy">
+      <div class="cap"><b>poster</b> &middot; tt-a1i/archify</div></a>
+    <a class="cardlink" href="examples/poster-openlogi.html">
+      <img src="examples/poster-openlogi.png" alt="poster mood, OpenLogi" loading="lazy">
+      <div class="cap"><b>poster</b> &middot; AprilNEA/OpenLogi</div></a>
+    <a class="cardlink" href="examples/blueprint-macos-harness.html">
+      <img src="examples/blueprint-macos-harness.png" alt="blueprint mood, macos-harness" loading="lazy">
+      <div class="cap"><b>blueprint</b> &middot; browser-use/macos-harness</div></a>
+    <a class="cardlink" href="examples/gallery-cumora.html">
+      <img src="examples/gallery-cumora.png" alt="gallery mood, cumora" loading="lazy">
+      <div class="cap"><b>gallery</b> &middot; yetone/cumora</div></a>
+  </div>
+
+  <footer>MIT &middot; cards are written by the agent, checked by
+  check_card.py, rendered by your own Chrome</footer>
+</div>
+</body>
+</html>
