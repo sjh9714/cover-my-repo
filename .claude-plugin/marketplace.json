@@ -1,0 +1,15 @@
+{
+  "name": "repo-cover",
+  "metadata": {
+    "description": "Design GitHub social-preview cards (og:image, 1280x640) as one self-contained HTML file. Four editorial moods, CJK-first typography, deterministic design checks, crisp PNG export."
+  },
+  "owner": {
+    "name": "sjh9714"
+  },
+  "plugins": [
+    {
+      "name": "repo-cover",
+      "source": "./"
+    }
+  ]
+}

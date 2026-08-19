@@ -1,0 +1,38 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500&display=swap">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1280px;height:640px;overflow:hidden}
+
+.card{position:relative;width:1280px;height:640px;background:#10233B;padding:128px 96px 0;
+  background-image:linear-gradient(rgba(214,228,244,.055) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(214,228,244,.055) 1px,transparent 1px);
+  background-size:32px 32px;font-family:'IBM Plex Mono',monospace}
+.frame{position:absolute;inset:40px;border:1px solid rgba(214,228,244,.30);pointer-events:none}
+.corner{position:absolute;width:24px;height:24px}
+.eyebrow{font:500 15px/1 'IBM Plex Mono',monospace;letter-spacing:.22em;
+  text-transform:uppercase;color:rgba(232,240,250,.62);display:flex;justify-content:space-between}
+.title{font-weight:600;color:#E8F0FA;font-size:88px;
+  letter-spacing:.01em;line-height:1.1;margin-top:40px;text-transform:uppercase}
+.title .stop{color:#5CC8FF}
+.desc{font:400 22px/1.7 'IBM Plex Mono',monospace;color:rgba(232,240,250,.62);
+  margin-top:32px;max-width:700px}
+.meta{position:absolute;left:96px;right:96px;bottom:68px;
+  border-top:1px solid rgba(214,228,244,.30);padding-top:22px;display:flex;gap:44px;
+  font:500 15px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;
+  text-transform:uppercase;color:rgba(232,240,250,.62)}
+.dims{position:absolute;right:52px;bottom:46px;font:400 12px/1 'IBM Plex Mono',monospace;
+  letter-spacing:.12em;color:rgba(232,240,250,.62)}
+
+</style></head><body><div class="card">
+<div class="frame"></div>
+<svg class="corner" style="left:28px;top:28px"><path d="M0 24V0h24" stroke="rgba(214,228,244,.30)" stroke-width="2" fill="none"/></svg>
+<svg class="corner" style="right:28px;top:28px;transform:rotate(90deg)"><path d="M0 24V0h24" stroke="rgba(214,228,244,.30)" stroke-width="2" fill="none"/></svg>
+<svg class="corner" style="right:28px;bottom:28px;transform:rotate(180deg)"><path d="M0 24V0h24" stroke="rgba(214,228,244,.30)" stroke-width="2" fill="none"/></svg>
+<svg class="corner" style="left:28px;bottom:28px;transform:rotate(270deg)"><path d="M0 24V0h24" stroke="rgba(214,228,244,.30)" stroke-width="2" fill="none"/></svg>
+<div class="eyebrow"><span>browser-use</span><span>PLATE 790</span></div>
+<h1 class="title">macos-harness<span class="stop">_</span></h1>
+<p class="desc">Drive real macOS apps from an agent loop. <span style="white-space:nowrap">Accessibility-tree</span> actions, screenshot diffing, replayable sessions.</p>
+<div class="meta"><span class="item"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#5CC8FF;margin-right:10px;vertical-align:-1px"></span>Python</span><span class="item">MIT</span></div>
+<div class="dims">1280 &times; 640</div>
+</div></body></html>

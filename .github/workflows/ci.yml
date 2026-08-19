@@ -1,0 +1,37 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  proof:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check every shipped example
+        run: python3 skills/repo-cover/scripts/check_card.py skills/repo-cover/assets/examples/*.html
+      - name: Rebuild examples from the generator (drift check)
+        run: |
+          python3 scripts/build_examples.py
+          git diff --exit-code -- 'skills/repo-cover/assets/examples/*.html' \
+            || (echo "::error::checked-in examples drifted from the generator" && exit 1)
+      - name: Render examples with the bundled action
+        uses: ./
+        with:
+          card: skills/repo-cover/assets/examples/editorial-red-handed.html
+          output: proof.png
+      - name: Verify render dimensions
+        run: |
+          python3 - <<'EOF'
+          import struct
+          with open('proof.png','rb') as f:
+              data = f.read(33)
+          w, h = struct.unpack('>II', data[16:24])
+          assert (w, h) == (1280, 640), f"got {w}x{h}"
+          print("proof.png is 1280x640")
+          EOF
+      - uses: actions/upload-artifact@v4
+        with:
+          name: proof
+          path: proof.png

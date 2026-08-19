@@ -1,0 +1,26 @@
+name: repo-cover-render
+description: >
+  Re-render a repo-cover card HTML to PNG in CI, so the social preview
+  never ships with fallback fonts and stays fresh on a schedule.
+inputs:
+  card:
+    description: Path to the card HTML file
+    required: true
+  output:
+    description: Path for the rendered PNG
+    default: cover.png
+runs:
+  using: composite
+  steps:
+    - name: Set up Chrome
+      uses: browser-actions/setup-chrome@v2
+    - name: Render
+      shell: bash
+      env:
+        CARD: ${{ inputs.card }}
+        OUT: ${{ inputs.output }}
+      run: |
+        chrome --headless=new --disable-gpu --hide-scrollbars \
+          --window-size=1280,640 --virtual-time-budget=9000 \
+          --screenshot="$OUT" "file://$GITHUB_WORKSPACE/$CARD"
+        ls -la "$OUT"
