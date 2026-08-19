@@ -11,6 +11,8 @@ from your language, and deterministic checks that keep the model honest.
 
 [한국어](README.ko.md) | [日本語](README.ja.md)
 
+![Four moods, animated](docs/demo.gif)
+
 ![Four moods](docs/hero.png)
 
 ![Before and after](docs/compare.png)

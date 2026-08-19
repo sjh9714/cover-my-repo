@@ -11,6 +11,8 @@ X, 슬랙, 디스코드에 레포 링크를 붙일 때마다 카드가 보입니
 
 [English](README.md) | [日本語](README.ja.md)
 
+![네 가지 무드 데모](docs/demo.gif)
+
 ![네 가지 무드](docs/hero.png)
 
 ![비포 애프터](docs/compare.png)

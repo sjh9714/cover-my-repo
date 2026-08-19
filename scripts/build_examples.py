@@ -17,7 +17,9 @@ OUT.mkdir(parents=True, exist_ok=True)
 FONTS = ("https://fonts.googleapis.com/css2?"
          "family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&"
          "family=IBM+Plex+Mono:wght@400;500;600&"
-         "family=Noto+Sans+KR:wght@400;500&display=swap")
+         "family=Noto+Sans+KR:wght@400;500&"
+         "family=Noto+Sans+JP:wght@400;500&"
+         "family=Noto+Sans+SC:wght@400;500&display=swap")
 
 PAPER, INK, MUTED, HAIR = "#FAF9F5", "#1D1A16", "#6B655C", "#E3DFD7"
 
@@ -78,7 +80,7 @@ def meta_items(items, dot_color):
 
 
 # ---------------------------------------------------------------- editorial
-def editorial(owner, name, desc, accent, metas, avatar=None, cjk=False):
+def editorial(owner, name, desc, accent, metas, avatar=None, cjk=False, lang=None):
     s = seed(name)
     n_arcs = 4 + s % 3                      # 4-6 arcs, seeded by repo name
     radii = [84 + i * (56 + s % 14) for i in range(n_arcs)]
@@ -86,8 +88,14 @@ def editorial(owner, name, desc, accent, metas, avatar=None, cjk=False):
     arcs = "".join(
         f'<circle cx="420" cy="420" r="{r}" opacity="{o}"/>'
         for r, o in zip(radii, ops))
-    desc_css = ("font:400 30px/1.6 'Noto Sans KR',sans-serif;word-break:keep-all"
-                if cjk else "font:400 29px/1.5 'Noto Sans KR',sans-serif")
+    if lang == "ja":
+        desc_css = "font:400 30px/1.6 'Noto Sans JP',sans-serif"
+    elif lang == "sc":
+        desc_css = "font:400 30px/1.6 'Noto Sans SC',sans-serif"
+    elif cjk or lang == "ko":
+        desc_css = "font:400 30px/1.6 'Noto Sans KR',sans-serif;word-break:keep-all"
+    else:
+        desc_css = "font:400 29px/1.5 'Noto Sans KR',sans-serif"
     av = (f'<img class="avatar" src="{avatar}" width="72" height="72">'
           if avatar else "")
     css = f"""
@@ -237,6 +245,14 @@ CARDS = [
         owner="sjh9714", name="repo-cover",
         desc="Your repo&rsquo;s social preview, designed like a magazine masthead. Four moods, CJK-first, one HTML file.",
         accent="#B3382C", metas=["Agent skill", "MIT"])),
+    ("editorial-japanese", editorial, dict(
+        owner="zenn-dev", name="zenn-editor",
+        desc="Zenn の記事とブックを執筆するためのエディタとプレビュー環境。",
+        accent="#3074BF", metas=["TypeScript", "MIT"], lang="ja")),
+    ("editorial-chinese", editorial, dict(
+        owner="ruanyf", name="weekly",
+        desc="科技爱好者周刊，每周五发布。记录每周值得分享的科技内容。",
+        accent="#46627F", metas=["Documentation"], lang="sc")),
     ("poster-archify", poster, dict(
         owner="tt-a1i", name="archify",
         desc="Beautiful, verifiable architecture diagrams. Self-contained HTML with motion and crisp export.",
