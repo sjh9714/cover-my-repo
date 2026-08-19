@@ -35,7 +35,7 @@ npx skills add sjh9714/repo-cover
 跑完检查，导出 1280x640 的 PNG。上传到 **Settings → Social preview**
 即可。
 
-## 四种风格
+## 五种风格
 
 | | |
 |---|---|
@@ -43,6 +43,7 @@ npx skills add sjh9714/repo-cover
 | **poster**。用语言颜色调出的深色底，仓库首字母裁切水印 | ![poster](skills/repo-cover/assets/examples/poster-openlogi.png) |
 | **blueprint**。藏青方格纸，等宽字体，角标，由仓库名推导的图号 | ![blueprint](skills/repo-cover/assets/examples/blueprint-macos-harness.png) |
 | **gallery**。美术馆作品标签。纯白，居中，细衬线 | ![gallery](skills/repo-cover/assets/examples/gallery-cumora.png) |
+| **terminal**。把仓库变成一个终端会话。窗口装饰、块状光标、EXIT 0 | ![terminal](skills/repo-cover/assets/examples/terminal-freeze.png) |
 
 不会有两张相同的卡片。强调色来自主要语言，同心圆数量和图号来自
 仓库名的哈希，poster 的水印就是你仓库自己的字母。

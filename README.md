@@ -43,7 +43,7 @@ The agent gathers the facts, rewrites your description into one tight
 line, writes `<repo>-cover.html`, checks it, and exports a 1280x640 PNG
 you upload under **Settings → Social preview**.
 
-## Four moods
+## Five moods
 
 Every example is a live page in the [gallery](https://sjh9714.github.io/repo-cover/). Click through and view source.
 
@@ -53,6 +53,7 @@ Every example is a live page in the [gallery](https://sjh9714.github.io/repo-cov
 | **poster**. A deep field mixed from your language color, your first letter as a cropped watermark | ![poster](skills/repo-cover/assets/examples/poster-openlogi.png) |
 | **blueprint**. Navy grid, mono type, corner ticks, a plate number derived from your repo name | ![blueprint](skills/repo-cover/assets/examples/blueprint-macos-harness.png) |
 | **gallery**. A museum wall label. Pure white, centered, light serif | ![gallery](skills/repo-cover/assets/examples/gallery-cumora.png) |
+| **terminal**. The repo as a terminal session, window chrome, block cursor, EXIT 0 | ![terminal](skills/repo-cover/assets/examples/terminal-freeze.png) |
 
 No two cards match. The accent comes from your primary language, the
 arcs and plate numbers are seeded by your repo name, and the poster

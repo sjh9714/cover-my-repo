@@ -43,7 +43,7 @@ pi install https://github.com/sjh9714/repo-cover
 `<repo>-cover.html`을 쓰고, 검사를 돌리고, 1280x640 PNG로
 내보냅니다. **Settings → Social preview** 에 업로드하면 끝.
 
-## 네 가지 무드
+## 다섯 가지 무드
 
 모든 예제는 [갤러리](https://sjh9714.github.io/repo-cover/)에서 라이브 페이지로 볼 수 있습니다.
 
@@ -53,6 +53,7 @@ pi install https://github.com/sjh9714/repo-cover
 | **poster**. 언어 색을 섞어 만든 딥 컬러 필드, 레포 첫 글자를 크롭한 워터마크 | ![poster](skills/repo-cover/assets/examples/poster-openlogi.png) |
 | **blueprint**. 네이비 그리드, 모노 타입, 코너 틱, 레포 이름에서 유도한 도면 번호 | ![blueprint](skills/repo-cover/assets/examples/blueprint-macos-harness.png) |
 | **gallery**. 미술관 벽 라벨. 순백, 중앙 정렬, 가는 세리프 | ![gallery](skills/repo-cover/assets/examples/gallery-cumora.png) |
+| **terminal**. 레포를 터미널 세션처럼. 창 크롬, 블록 커서, EXIT 0 | ![terminal](skills/repo-cover/assets/examples/terminal-freeze.png) |
 
 카드 두 장이 같아지는 일은 없습니다. 악센트는 주 언어에서, 동심원과
 도면 번호는 레포 이름 해시에서, 포스터 워터마크는 레포 자신의

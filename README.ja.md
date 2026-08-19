@@ -36,7 +36,7 @@ npx skills add sjh9714/repo-cover
 `<repo>-cover.html` を書き、チェックを通し、1280x640 の PNG を書き出し
 ます。**Settings → Social preview** にアップロードすれば完了です。
 
-## 4 つのムード
+## 5 つのムード
 
 | | |
 |---|---|
@@ -44,6 +44,7 @@ npx skills add sjh9714/repo-cover
 | **poster**。言語カラーから混ぜたディープカラーの面、リポジトリの頭文字をクロップした透かし | ![poster](skills/repo-cover/assets/examples/poster-openlogi.png) |
 | **blueprint**。ネイビーの方眼、等幅書体、コーナーティック、リポジトリ名から導いた図面番号 | ![blueprint](skills/repo-cover/assets/examples/blueprint-macos-harness.png) |
 | **gallery**。美術館の作品ラベル。純白、中央揃え、細身のセリフ | ![gallery](skills/repo-cover/assets/examples/gallery-cumora.png) |
+| **terminal**。リポジトリをターミナルセッションに。ウィンドウクローム、ブロックカーソル、EXIT 0 | ![terminal](skills/repo-cover/assets/examples/terminal-freeze.png) |
 
 同じカードは二枚と生まれません。アクセントは主要言語から、同心円と
 図面番号はリポジトリ名のハッシュから、poster の透かしはあなたの
