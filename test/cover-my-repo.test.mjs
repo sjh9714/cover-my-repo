@@ -3,6 +3,7 @@ import test from 'node:test';
 
 import {
   findChrome,
+  main,
   parseOptions,
   parseRepository,
   selectAuthenticatedAgent,
@@ -100,4 +101,17 @@ test('rejects malformed card HTML', () => {
     true,
   );
   assert.throws(() => validateCardHtml('<html><body>Card</body>'));
+  assert.throws(() => validateCardHtml('<!doctype html><html><body>Card</body><head></head></html>'));
+});
+
+test('rejects card HTML with trailing garbage', () => {
+  assert.throws(() => validateCardHtml('<!doctype html><html><head></head><body>Card</body></html>garbage'));
+});
+
+test('prints help without a label-style colon', () => {
+  const messages = [];
+  main(['--help'], (message) => messages.push(message));
+  assert.deepEqual(messages, [
+    'Run cover-my-repo [owner/repo] [--agent auto|codex|claude|cursor] [--output <dir>] [--no-open]',
+  ]);
 });

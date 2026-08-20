@@ -64,7 +64,7 @@ npm pack --dry-run
 ```
 
 ```text
-Usage: cover-my-repo [owner/repo] [--agent auto|codex|claude|cursor] [--output <dir>] [--no-open]
+Run cover-my-repo [owner/repo] [--agent auto|codex|claude|cursor] [--output <dir>] [--no-open]
 0.1.0
 cover-my-repo-0.1.0.tgz
 ```
@@ -74,3 +74,41 @@ cover-my-repo-0.1.0.tgz
 The review found one Windows Chrome lookup issue. Empty environment variables produced a relative path. The focused regression test failed first and the lookup now excludes those paths.
 
 No unresolved concerns.
+
+## Fix Round 1
+
+### Changed Behavior
+
+- Help begins with `Run` and has no label-style colon.
+- Card HTML must have ordered document parts and end at `</html>` apart from whitespace.
+
+### Test File
+
+`test/cover-my-repo.test.mjs`
+
+### RED
+
+```sh
+node --test test/cover-my-repo.test.mjs
+```
+
+```text
+# tests 10
+# pass 7
+# fail 3
+Missing expected exception for misordered and trailing card HTML
+Expected help text did not match
+```
+
+### GREEN
+
+```sh
+node --test test/cover-my-repo.test.mjs
+npm test
+```
+
+```text
+# tests 10
+# pass 10
+# fail 0
+```

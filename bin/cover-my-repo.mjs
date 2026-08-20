@@ -99,14 +99,7 @@ export function validatePngDimensions(png, width = 1280, height = 640) {
 }
 
 export function validateCardHtml(html) {
-  if (
-    typeof html !== 'string' ||
-    !/<!doctype html>/i.test(html) ||
-    !/<html(?:\s[^>]*)?>/i.test(html) ||
-    !/<\/html\s*>/i.test(html) ||
-    !/<head(?:\s[^>]*)?>[\s\S]*<\/head\s*>/i.test(html) ||
-    !/<body(?:\s[^>]*)?>[\s\S]*<\/body\s*>/i.test(html)
-  ) {
+  if (typeof html !== 'string' || !/^\s*<!doctype html>\s*<html(?:\s[^>]*)?>\s*<head(?:\s[^>]*)?>[\s\S]*<\/head\s*>\s*<body(?:\s[^>]*)?>[\s\S]*<\/body\s*>\s*<\/html\s*>\s*$/i.test(html)) {
     throw new Error('Card HTML must be a complete document');
   }
   return true;
@@ -114,7 +107,7 @@ export function validateCardHtml(html) {
 
 export function main(args = process.argv.slice(2), write = console.log) {
   const options = parseOptions(args);
-  if (options.help) write('Usage: cover-my-repo [owner/repo] [--agent auto|codex|claude|cursor] [--output <dir>] [--no-open]');
+  if (options.help) write('Run cover-my-repo [owner/repo] [--agent auto|codex|claude|cursor] [--output <dir>] [--no-open]');
   if (options.version) write(version);
   return options;
 }
