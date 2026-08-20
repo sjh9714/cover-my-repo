@@ -12,8 +12,8 @@
 npx cover-my-repo
 ```
 
-Run the command inside a Git repository. It detects an authenticated Codex,
-Claude, or Cursor CLI, creates three design options, renders them with your
+Run the command inside a Git repository. It detects an authenticated Codex or
+Cursor CLI, creates three design options, renders them with your
 local Chrome, and opens a comparison preview.
 
 It uses no image model and sends no repository credentials.
@@ -23,14 +23,14 @@ Node.js 20 and Chrome are required. Upload stays manual under
 
 ![Five moods](docs/hero.png)
 
-![GitHub default compared with Cover My Repo](docs/compare.png)
+![A generator template compared with Cover My Repo](docs/compare.png)
 
 ## What you get
 
 - three self-contained HTML options
 - matching 1280x640 PNG files rendered by local Chrome
 - a comparison page with full-size and feed-size previews
-- deterministic checks for contrast, overflow, CJK line breaks, and canvas size
+- deterministic checks for contrast, CJK line breaks, and canvas size
 
 The CLI leaves the final GitHub upload to you.
 
@@ -79,7 +79,6 @@ Then ask your agent to make a social preview card for the repository.
 
 ## What the checker enforces
 
-- a 4px grid for coordinates and sizes
 - one accent per card with WCAG contrast
 - title size tiers from 132px to 64px
 - a 110-character description budget, or 60 characters for CJK

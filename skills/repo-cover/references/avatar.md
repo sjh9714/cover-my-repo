@@ -1,19 +1,19 @@
 # Avatar embedding
 
 The card file must stay self-contained. A hotlinked avatar breaks in
-og:image contexts and goes stale. Inline it:
+og:image contexts and goes stale. Inline it with this command.
 
 ```sh
 curl -sL "https://github.com/<owner>.png?size=144" | base64
 ```
 
-Then:
+Then use the result.
 
 ```html
 <img class="avatar" src="data:image/png;base64,<...>" width="72" height="72">
 ```
 
-Rules:
+Follow these rules.
 
 - 144px source for a 72px circle (2x for retina).
 - Editorial mood only, `top:104px; right:88px`, `border-radius:50%`,

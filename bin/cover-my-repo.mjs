@@ -9,9 +9,10 @@ import { spawnSync } from 'node:child_process';
 
 const require = createRequire(import.meta.url);
 const { version } = require('../package.json');
-const agents = ['codex', 'claude', 'cursor'];
+const agents = ['codex', 'cursor'];
 const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 const maxPngBytes = 1024 * 1024;
+const cardCsp = "default-src 'none'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; base-uri 'none'; form-action 'none'";
 const moduleDirectory = dirname(fileURLToPath(import.meta.url));
 const skillDirectory = resolve(moduleDirectory, '../skills/repo-cover');
 const requiredCards = ['editorial.html', 'poster.html', 'adaptive.html'];
@@ -20,17 +21,22 @@ function boundedText(value, length) {
   return String(value ?? '').slice(0, length);
 }
 
-function readFileIfPresent(path) {
+function readFileIfPresent(parent, path) {
   try {
-    return existsSync(path) ? readFileSync(path, 'utf8') : '';
+    const target = realpathSync(parent);
+    const stat = lstatSync(path);
+    if (!stat.isFile()) return '';
+    const realPath = realpathSync(path);
+    return staysWithin(target, realPath) ? readFileSync(realPath, 'utf8') : '';
   } catch {
     return '';
   }
 }
 
 function localRepositoryFacts(cwd) {
-  const manifestName = ['package.json', 'pyproject.toml', 'Cargo.toml', 'go.mod'].find((name) => existsSync(join(cwd, name)));
-  const manifest = manifestName ? readFileIfPresent(join(cwd, manifestName)) : '';
+  const manifests = ['package.json', 'pyproject.toml', 'Cargo.toml', 'go.mod']
+    .map((name) => [name, readFileIfPresent(cwd, join(cwd, name))]);
+  const [manifestName, manifest] = manifests.find(([, content]) => content) || [];
   let packageFacts = {};
   if (manifestName === 'package.json') {
     try {
@@ -41,7 +47,7 @@ function localRepositoryFacts(cwd) {
     manifest: manifest ? { name: manifestName, content: boundedText(manifest, 6000) } : null,
     metadata: { description: packageFacts.description, name: packageFacts.name },
     paths: readdirSync(cwd, { withFileTypes: true }).slice(0, 200).map((entry) => boundedText(entry.name, 32)),
-    readme: boundedText(readFileIfPresent(join(cwd, 'README.md')), 10000),
+    readme: boundedText(readFileIfPresent(cwd, join(cwd, 'README.md')), 10000),
   };
 }
 
@@ -84,11 +90,10 @@ export async function collectRepositoryContext({ cwd = process.cwd(), fetch = gl
   ].join('\n');
 }
 
-function agentCommand(agent, prompt, status = false) {
+function agentCommand(agent, prompt, status = false, workspace = '') {
   const argumentsByAgent = {
-    claude: status ? ['auth', 'status'] : ['-p', prompt],
-    codex: status ? ['login', 'status'] : ['exec', '--skip-git-repo-check', prompt],
-    cursor: status ? ['status'] : ['--print', '--force', '--output-format', 'text', prompt],
+    codex: status ? ['login', 'status'] : ['exec', '--sandbox', 'workspace-write', '--ephemeral', '--ignore-user-config', '--skip-git-repo-check', '-C', workspace, prompt],
+    cursor: status ? ['status'] : ['--print', '--sandbox', 'enabled', '--workspace', workspace, '--output-format', 'text', prompt],
   };
   return {
     args: argumentsByAgent[agent],
@@ -97,23 +102,21 @@ function agentCommand(agent, prompt, status = false) {
 }
 
 function agentEnvironment(env) {
-  return Object.fromEntries(
+  return {
+    NO_OPEN_BROWSER: '1',
+    ...Object.fromEntries(
     ['APPDATA', 'HOME', 'LOCALAPPDATA', 'PATH', 'USERPROFILE', 'XDG_CONFIG_HOME']
       .filter((name) => env[name])
       .map((name) => [name, env[name]]),
-  );
+    ),
+  };
 }
 
 function hasAuthenticatedStatus(agent, env) {
   const { command, args } = agentCommand(agent, '', true);
-  const result = spawnSync(command, args, { encoding: 'utf8', env: agentEnvironment(env) });
+  const result = spawnSync(command, args, { encoding: 'utf8', env: agentEnvironment(env), timeout: 15000 });
   const status = `${result.stdout || ''}\n${result.stderr || ''}`;
-  if (result.status !== 0) return false;
-  if (agent === 'claude') {
-    try {
-      return JSON.parse(status).loggedIn === true;
-    } catch {}
-  }
+  if (result.error || result.status !== 0) return false;
   return /logged in|authenticated/i.test(status) && !/not (logged in|authenticated)|unauthenticated|login required/i.test(status);
 }
 
@@ -133,7 +136,7 @@ function destinationExists(path) {
 }
 
 function outputDirectory(cwd, output) {
-  if (output && (isAbsolute(output) || output.split(/[\\/]+/).includes('..'))) throw new Error('Output directory must stay within the target repository');
+  if (output && (isAbsolute(output) || /[\\/]/.test(output))) throw new Error('Output directory must be a direct child of the target repository');
   const target = realpathSync(cwd);
   const requested = resolve(target, output || 'cover-my-repo-output');
   if (requested === target || !staysWithin(target, requested)) throw new Error('Output directory must stay within the target repository');
@@ -150,16 +153,16 @@ function outputDirectory(cwd, output) {
 
 function publishCards(stage, output) {
   const parent = dirname(output.destination);
-  let existingParent = parent;
-  while (!existsSync(existingParent)) existingParent = dirname(existingParent);
-  if (!staysWithin(output.target, realpathSync(existingParent))) throw new Error('Output directory must stay within the target repository');
-  mkdirSync(parent, { recursive: true });
   if (!staysWithin(output.target, realpathSync(parent))) throw new Error('Output directory must stay within the target repository');
   if (destinationExists(output.destination)) throw new Error('Output directory already exists');
   const temporary = mkdtempSync(join(parent, `.${basename(output.destination)}-`));
   try {
     for (const name of [...requiredCards, ...requiredCards.map((name) => name.replace(/\.html$/, '.png')), 'index.html']) {
-      cpSync(join(stage, name), join(temporary, name));
+      const source = join(stage, name);
+      const stat = lstatSync(source);
+      const realSource = realpathSync(source);
+      if (!stat.isFile() || !staysWithin(realpathSync(stage), realSource)) throw new Error('Generated output must be a regular file');
+      writeFileSync(join(temporary, name), readFileSync(realSource), { flag: 'wx' });
     }
     renameSync(temporary, output.destination);
   } finally {
@@ -182,21 +185,44 @@ export async function generateCards({ agent = 'auto', cwd = process.cwd(), env =
   const destination = outputDirectory(cwd, output);
   validateChrome(chrome);
   const candidates = agent === 'auto' ? agents : [agent];
-  const authenticated = Object.fromEntries(candidates.map((name) => [name, hasAuthenticatedStatus(name, env)]));
-  const selectedAgent = selectAuthenticatedAgent(agent, authenticated);
+  const selectedAgent = candidates.find((name) => hasAuthenticatedStatus(name, env));
+  if (!selectedAgent) throw new Error('No authenticated agent is available');
   const stage = mkdtempSync(join(tmpdir(), 'cover-my-repo-'));
   try {
-    cpSync(skillDirectory, join(stage, 'skill'), { recursive: true });
-    writeFileSync(join(stage, 'repo-context.md'), await collectRepositoryContext({ cwd, fetch, repository }));
-    const prompt = 'This batch is pre-approved. Do not ask questions or request confirmation. Read repo-context.md and skill/SKILL.md. Using only facts from repo-context.md, create exactly editorial.html, poster.html, and adaptive.html as complete self-contained card documents in this directory. Use the editorial mood for editorial.html and the poster mood for poster.html. For adaptive.html, choose terminal for CLI or developer tools, otherwise blueprint for infrastructure, otherwise gallery. Read the matching mood reference and example for each selected mood. Run skill/scripts/check_card.py on all three files. Finish only after all three files exist and pass the checker.';
-    const { command, args } = agentCommand(selectedAgent, prompt);
-    const result = spawnSync(command, args, { cwd: stage, encoding: 'utf8', env: agentEnvironment(env) });
-    if (result.status !== 0) throw new Error(`${selectedAgent} failed to generate cards`);
-    if (!requiredCards.every((name) => existsSync(join(stage, name)))) throw new Error(`${selectedAgent} completed without creating the required card files`);
-    const cards = requiredCards.map((name) => ({ name, html: readFileSync(join(stage, name), 'utf8') }));
-    for (const card of cards) validateCardHtml(card.html);
-    renderCards({ chrome, htmlPaths: cards.map((card) => join(stage, card.name)), output: stage, repository });
-    const published = publishCards(stage, destination);
+    const workspace = join(stage, 'workspace');
+    mkdirSync(workspace);
+    const workspaceReal = realpathSync(workspace);
+    cpSync(skillDirectory, join(workspace, 'skill'), { recursive: true });
+    writeFileSync(join(workspace, 'repo-context.md'), await collectRepositoryContext({ cwd, fetch, repository }), { flag: 'wx' });
+    const initialPrompt = 'This batch is pre-approved. Do not ask questions, request confirmation, or run commands. Read repo-context.md and skill/SKILL.md. Using only facts from repo-context.md, create exactly editorial.html, poster.html, and adaptive.html as complete self-contained card documents in this directory. Use the editorial mood for editorial.html and the poster mood for poster.html. For adaptive.html, choose terminal for CLI or developer tools, otherwise blueprint for infrastructure, otherwise gallery. Read the matching mood reference and example for each selected mood. Finish only after all three files exist. The parent process validates every file.';
+    let cards;
+    let prompt = initialPrompt;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const { command, args } = agentCommand(selectedAgent, prompt, false, workspaceReal);
+      const result = spawnSync(command, args, { cwd: workspaceReal, encoding: 'utf8', env: agentEnvironment(env), timeout: 600000 });
+      if (result.error || result.status !== 0) throw new Error(`${selectedAgent} failed to generate cards`);
+      if (!requiredCards.every((name) => existsSync(join(workspace, name)))) throw new Error(`${selectedAgent} completed without creating the required card files`);
+      const rawCards = requiredCards.map((name) => {
+        const path = join(workspace, name);
+        const stat = lstatSync(path);
+        if (!stat.isFile() || !staysWithin(workspaceReal, realpathSync(path))) throw new Error('Generated card must be a regular file');
+        if (stat.size > 1024 * 1024) throw new Error('Generated card must not exceed 1 MiB');
+        return { name, html: readFileSync(path, 'utf8') };
+      });
+      try {
+        for (const card of rawCards) validateCardHtml(card.html);
+        cards = rawCards.map((card) => ({ ...card, html: injectCsp(card.html) }));
+        break;
+      } catch (error) {
+        if (attempt === 1) throw error;
+        prompt = `Fix the existing three card files without running commands. Parent validation failed with ${boundedText(error.message, 160)}. Keep the required filenames and facts. Finish only after checking the failed rule in all three files.`;
+      }
+    }
+    const render = join(stage, 'render');
+    mkdirSync(render);
+    for (const card of cards) writeFileSync(join(render, card.name), card.html, { flag: 'wx' });
+    renderCards({ chrome, htmlPaths: cards.map((card) => join(render, card.name)), output: render, repository });
+    const published = publishCards(render, destination);
     return cards.map((card) => join(published, card.name));
   } finally {
     rmSync(stage, { recursive: true, force: true });
@@ -282,51 +308,78 @@ export function findChrome({ platform = process.platform, env = process.env, exi
 }
 
 export function validatePngDimensions(png, width = 1280, height = 640) {
-  if (!Buffer.isBuffer(png) || png.length < 24 || !png.subarray(0, 8).equals(pngSignature) || png.toString('ascii', 12, 16) !== 'IHDR') {
+  if (!Buffer.isBuffer(png) || png.length > maxPngBytes) throw new Error('PNG must not exceed 1 MiB');
+  if (png.length < 45 || !png.subarray(0, 8).equals(pngSignature)) {
     throw new Error('Invalid PNG');
   }
+  let offset = 8;
+  let chunk = 0;
+  let ended = false;
+  while (offset < png.length) {
+    if (offset + 12 > png.length) throw new Error('Invalid PNG');
+    const length = png.readUInt32BE(offset);
+    const type = png.toString('ascii', offset + 4, offset + 8);
+    const next = offset + 12 + length;
+    if (next > png.length || (chunk === 0 && (type !== 'IHDR' || length !== 13))) throw new Error('Invalid PNG');
+    offset = next;
+    chunk += 1;
+    if (type === 'IEND') {
+      if (length !== 0 || offset !== png.length) throw new Error('Invalid PNG');
+      ended = true;
+      break;
+    }
+  }
+  if (!ended) throw new Error('Invalid PNG');
   if (png.readUInt32BE(16) !== width || png.readUInt32BE(20) !== height) {
     throw new Error(`PNG must be ${width} by ${height}`);
   }
-  if (png.length > maxPngBytes) throw new Error('PNG must not exceed 1 MiB');
   return true;
 }
 
 function validateChrome(chrome) {
   if (!chrome) throw new Error('Chrome is required to render cards');
-  const result = spawnSync(chrome, ['--version'], { encoding: 'utf8' });
-  if (result.status !== 0) throw new Error('Chrome is unavailable');
+  const result = spawnSync(chrome, ['--version'], { encoding: 'utf8', timeout: 15000 });
+  if (result.error || result.status !== 0) throw new Error('Chrome is unavailable');
+}
+
+function injectCsp(html) {
+  return html.replace(/<head(?:\s[^>]*)?>/i, (head) => `${head}<meta http-equiv="Content-Security-Policy" content="${cardCsp}">`);
 }
 
 function previewHtml(names, repository) {
   const settings = repository && `https://github.com/${encodeURIComponent(repository.owner)}/${encodeURIComponent(repository.repo)}/settings`;
   const cards = names.map((name) => {
     const title = name.replace(/\.png$/, '');
-    return `<section><h2>${title}</h2><p><a href="${name}">Open PNG</a></p><img src="${name}" alt="${title} full-size preview" width="1280"><img src="${name}" alt="${title} 506 pixel preview" width="506"></section>`;
+    return `<section><div><h2>${title}</h2><a href="${name}">Open PNG</a></div><img class="full" src="${name}" alt="${title} full-size preview" width="1280"><figure><figcaption>Feed size</figcaption><img class="feed" src="${name}" alt="${title} 506 pixel preview" width="506"></figure></section>`;
   }).join('');
-  return `<!doctype html><html><head><meta charset="utf-8"><title>Cover My Repo previews</title><style>body{font-family:sans-serif;margin:24px}section{margin:0 0 32px}img{display:block;height:auto;margin:12px 0;max-width:100%}</style></head><body><h1>Cover My Repo previews</h1>${settings ? `<p><a href="${settings}">GitHub social preview settings</a></p>` : ''}${cards}</body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Cover My Repo previews</title><style>*{box-sizing:border-box}body{margin:0;background:#f5f2eb;color:#1d1a16;font-family:ui-sans-serif,system-ui,sans-serif}header{padding:56px max(24px,5vw) 28px}h1{font-family:Georgia,serif;font-size:clamp(38px,5vw,72px);font-weight:500;letter-spacing:-.04em;margin:0 0 12px}header p{color:#6b655c;margin:0}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;padding:20px max(24px,5vw) 64px}section{background:#fff;border:1px solid #e3dfd7;padding:16px}section>div{align-items:center;display:flex;justify-content:space-between;margin-bottom:14px}h2{font:600 13px ui-monospace,monospace;letter-spacing:.08em;margin:0;text-transform:uppercase}a{color:#8d3028;font-size:13px}.full,.feed{display:block;height:auto;width:100%}figure{border-top:1px solid #e3dfd7;margin:16px 0 0;padding-top:14px}figcaption{color:#6b655c;font-size:12px;margin-bottom:8px}.feed{max-width:506px}@media(max-width:900px){.grid{grid-template-columns:1fr}header{padding-top:36px}}</style></head><body><header><h1>Choose the cover you would click</h1><p>Compare all three at full size and at feed size.</p>${settings ? `<p><a href="${settings}">Open GitHub social preview settings</a></p>` : ''}</header><main class="grid">${cards}</main></body></html>`;
 }
 
 export function renderCards({ chrome, htmlPaths, output, repository = null }) {
   const pngPaths = htmlPaths.map((htmlPath) => {
     const pngPath = join(output, `${basename(htmlPath).replace(/\.html$/, '')}.png`);
+    if (destinationExists(pngPath)) throw new Error(`Chrome output already exists ${pngPath}`);
     const result = spawnSync(chrome, [
       '--headless=new',
-      '--no-sandbox',
       '--disable-dev-shm-usage',
+      '--disable-extensions',
+      '--disable-background-networking',
+      '--incognito',
       '--disable-gpu',
       '--hide-scrollbars',
       '--window-size=1280,640',
       '--virtual-time-budget=9000',
       `--screenshot=${pngPath}`,
       pathToFileURL(htmlPath).href,
-    ], { encoding: 'utf8' });
-    if (result.status !== 0) throw new Error(`Chrome failed to render ${htmlPath}`);
+    ], { encoding: 'utf8', timeout: 30000 });
+    if (result.error || result.status !== 0) throw new Error(`Chrome failed to render ${htmlPath}`);
     if (!existsSync(pngPath)) throw new Error(`Chrome did not create ${pngPath}`);
-    validatePngDimensions(readFileSync(pngPath));
+    const stat = lstatSync(pngPath);
+    if (!stat.isFile() || !staysWithin(realpathSync(output), realpathSync(pngPath))) throw new Error('Chrome output must be a regular file');
+    validatePngDimensions(readFileSync(realpathSync(pngPath)));
     return pngPath;
   });
-  writeFileSync(join(output, 'index.html'), previewHtml(pngPaths.map((pngPath) => basename(pngPath)), repository));
+  writeFileSync(join(output, 'index.html'), previewHtml(pngPaths.map((pngPath) => basename(pngPath)), repository), { flag: 'wx' });
   return pngPaths;
 }
 
@@ -346,6 +399,9 @@ export function validateCardHtml(html) {
   }
   if (!/\bwidth\s*:\s*1280px\b/i.test(html) || !/\bheight\s*:\s*640px\b/i.test(html)) throw new Error('Card HTML must be 1280 by 640');
   if (!/<h1(?:\s[^>]*)?>[\s\S]*?<\/h1\s*>/i.test(html)) throw new Error('Card HTML must include an h1 title');
+  if (/<(?:script|iframe|object|embed|base)\b|\son[a-z]+\s*=|<meta\b[^>]*http-equiv\s*=\s*["']?refresh\b|javascript\s*:/i.test(html)) {
+    throw new Error('Card HTML includes active content');
+  }
   if (/\b(?:box-shadow|text-shadow|drop-shadow|backdrop-filter|radial-gradient|conic-gradient)\b/i.test(html)) throw new Error('Card HTML includes forbidden styles');
   if (/[\u{1F300}-\u{1FAFF}]/u.test(html)) throw new Error('Card HTML includes forbidden emoji');
   if (/linear-gradient/i.test(html) && !html.replace(/\s/g, '').includes('background-size:32px32px')) {
@@ -389,14 +445,14 @@ export function validateCardHtml(html) {
       return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
     };
     const [lighter, darker] = [luminance(background), luminance(accent)].sort((a, b) => b - a);
-    if ((lighter + 0.05) / (darker + 0.05) < 3) throw new Error('Card HTML accent contrast is below 3 to 1');
+    if ((lighter + 0.05) / (darker + 0.05) < 4.5) throw new Error('Card HTML accent contrast is below 4.5 to 1');
   }
   return true;
 }
 
 export async function main(args = process.argv.slice(2), write = console.log, cwd = process.cwd(), dependencies = {}) {
   const options = parseOptions(args);
-  if (options.help) write('Run cover-my-repo [owner/repo] [--agent auto|codex|claude|cursor] [--output <dir>] [--no-open]');
+  if (options.help) write('Run cover-my-repo [owner/repo] [--agent auto|codex|cursor] [--output <dir>] [--no-open]');
   if (options.version) write(version);
   if (options.help || options.version) return options;
   const { chrome, env = process.env, fetch = globalThis.fetch, open = openOutputs } = dependencies;
@@ -408,7 +464,12 @@ export async function main(args = process.argv.slice(2), write = console.log, cw
   return cards;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+let runningAsMain = false;
+try {
+  runningAsMain = Boolean(process.argv[1]) && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
+} catch {}
+
+if (runningAsMain) {
   main().catch((error) => {
     console.error(error.message);
     process.exitCode = 1;

@@ -12,7 +12,7 @@
 npx cover-my-repo
 ```
 
-Git リポジトリ内で実行します。認証済みの Codex、Claude、Cursor CLI を
+Git リポジトリ内で実行します。認証済みの Codex または Cursor CLI を
 検出し、3 つのデザインを作り、ローカルの Chrome で描画して比較画面を
 開きます。
 
@@ -24,14 +24,14 @@ Node.js 20 と Chrome が必要です。GitHub の
 
 ![5 つのムード](docs/hero.png)
 
-![GitHub の標準画像と Cover My Repo の比較](docs/compare.png)
+![一般的な生成テンプレートと Cover My Repo の比較](docs/compare.png)
 
 ## 作られるもの
 
 - 自己完結した HTML デザイン 3 つ
 - ローカル Chrome で描画した 1280x640 PNG 3 枚
 - 原寸とフィード幅を並べる比較ページ
-- コントラスト、はみ出し、CJK 改行、キャンバス寸法の決定的チェック
+- コントラスト、CJK 改行、キャンバス寸法の決定的チェック
 
 最後の GitHub アップロードは CLI が代行しません。
 
@@ -74,7 +74,6 @@ codex plugin add repo-cover@repo-cover
 
 ## チェックされるルール
 
-- 座標とサイズはすべて 4px グリッド
 - カード 1 枚にアクセント 1 色と WCAG コントラスト
 - 名前の長さに応じた 132px から 64px のタイトル
 - 説明文は 110 文字、CJK は 60 文字まで

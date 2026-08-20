@@ -3,8 +3,8 @@ name: repo-cover
 description: >
   Design a GitHub social-preview card (og:image, 1280x640) for a repository.
   Use when the user asks for a social preview, repo cover, og image, link
-  card, opengraph image, or README hero. Four editorial moods (editorial,
-  poster, blueprint, gallery), CJK-first typography, one self-contained HTML
+  card, opengraph image, or README hero. Five editorial moods (editorial,
+  poster, blueprint, gallery, terminal), CJK-first typography, one self-contained HTML
   file, deterministic checks, crisp PNG export. No image model needed.
 license: MIT
 ---
@@ -17,17 +17,17 @@ step. Quality comes from following the numbers below exactly.
 
 ## Workflow
 
-1. **Gather facts.** From the target repo: owner, name, description,
+1. **Gather facts.** Gather the owner, name, description,
    primary language, license (use the `spdx_id`). Prefer
    `gh api repos/<owner>/<name>` or the local checkout. Never invent a
    star count or license.
 2. **Rewrite the description.** The card line is not the GitHub description
    verbatim. Compress it to one or two sentences, max 110 characters
-   (CJK: max 60 characters), concrete nouns, no marketing adjectives.
+   with a 60-character maximum for CJK, concrete nouns, and no marketing adjectives.
    Show the user your line before rendering if they are present; in a
    non-interactive run, proceed and include the line in your report.
-3. **Pick a mood.** Default `editorial`. Offer the other three only if the
-   user asks for options. Read exactly ONE mood reference and ONE example:
+3. **Pick a mood.** Default `editorial`. Offer the other four only if the
+   user asks for options. Read exactly ONE mood reference and ONE example from this list.
    - `references/mood-editorial.md` + `assets/examples/editorial-red-handed.html`
    - `references/mood-poster.md` + `assets/examples/poster-archify.html`
    - `references/mood-blueprint.md` + `assets/examples/blueprint-macos-harness.html`
@@ -48,35 +48,35 @@ step. Quality comes from following the numbers below exactly.
 
 ## Hard rules (all moods)
 
-- Canvas exactly 1280x640. Margins 88px (blueprint: 96px).
+- Canvas exactly 1280x640. Margins are 88px, or 96px for blueprint.
 - Follow the mood reference's numbers exactly. When you invent a
   coordinate the reference does not give, snap it to a 4px grid.
 - ONE accent color per card, used only in the places the mood reference
-  names. Default: the repo's primary-language color, darkened until it
+  names. The default is the repo's primary-language color, darkened until it
   passes 4.5:1 contrast against the background (`check_card.py`
-  verifies). No primary language (docs repos): use a brand color the
+  verifies). For a docs repo with no primary language, use a brand color the
   user names, or slate `#46627F` in one-shot runs. For brand colors
   read `references/brand-accent.md`.
-- Fonts only from Google Fonts: Fraunces, IBM Plex Mono, Noto Sans KR/JP/SC.
+- Fonts only from Google Fonts. Use Fraunces, IBM Plex Mono, or Noto Sans KR/JP/SC.
   Real fallback stacks always.
-- Title size by name length: <=9 chars 132px, <=14 108px, <=20 92px,
+- Title size follows name length. Use <=9 chars 132px, <=14 108px, <=20 92px,
   <=26 74px, longer 64px and allow two lines broken at a hyphen.
-- Description: max 2 lines. No mid-word hyphen breaks. Wrap compound
+- Keep the description to 2 lines. Do not allow mid-word hyphen breaks. Wrap compound
   words in `white-space:nowrap` spans.
 - Star counts are OFF by default. They go stale and embarrass small
   repos. Only include when the user explicitly asks; then format with
   thousands separators.
-- Meta row fallback: show what exists (language, license). If both are
+- The meta row shows what exists, either language or license. If both are
   missing, the single item is the repo URL without protocol.
 - Owner avatar is optional. If used, inline it as a base64 data URI
   (`references/avatar.md`) so the file stays self-contained.
-- Never: box-shadow, drop-shadow, glassmorphism, gradients (except the
+- Never use box-shadow, drop-shadow, glassmorphism, gradients except the
   blueprint grid lines), emoji, more than 2 typefaces + 1 mono, dark
   background with neon cyan glow, centered Inter on a purple gradient.
 
 ## What this is not
 
 - Not a screenshot beautifier, not a logo generator, not a slide tool.
-- Not dynamic: the card is a static file. Freshness comes from
+- The card is a static file. Freshness comes from
   re-rendering (the bundled Action), not from live data.
 - If the user wants diagrams, recommend a diagram skill instead.

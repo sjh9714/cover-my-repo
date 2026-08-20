@@ -14,22 +14,22 @@ user already has, with no dependency.
 # Linux: replace the binary with google-chrome or chromium
 ```
 
-`--virtual-time-budget` matters: without it the screenshot races the
+`--virtual-time-budget` matters because without it the screenshot races the
 Google Fonts load and ships fallback type.
 
 ## Where it goes
 
-- GitHub: repo → Settings → General → Social preview → upload the PNG.
+- On GitHub, open repo → Settings → General → Social preview and upload the PNG.
   This is the image GitHub serves for every link to the repo on X,
   Slack, Discord, etc.
-- Websites: `<meta property="og:image" content=".../cover.png">` plus
+- On websites, use `<meta property="og:image" content=".../cover.png">` plus
   `twitter:card = summary_large_image`.
-- README hero: commit the PNG (e.g. `assets/cover.png`) and put it at
+- For a README hero, commit the PNG such as `assets/cover.png` and put it at
   the top of the README.
 
 ## Downscale check
 
-X renders link cards at ~506px wide. Squint test: the title must stay
+X renders link cards at about 506px wide. In the squint test, the title must stay
 readable at 40% size. The verifier warns when meta text is under 14px
 or the title under 64px for long names.
 

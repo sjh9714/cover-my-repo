@@ -1,4 +1,4 @@
-# Mood: editorial (default)
+# Mood editorial (default)
 
 Warm paper, a big Fraunces wordmark with an accent full stop, quiet mono
 metadata, concentric arcs breathing in from the bottom-right corner.
@@ -14,7 +14,7 @@ Reads like a literary magazine masthead, not a generated banner.
 ## Skeleton
 
 Copy `assets/examples/editorial-red-handed.html` and replace content.
-Structure, top to bottom, all inside `.card { padding:118px 88px 0 }`:
+Use this top-to-bottom structure inside `.card { padding:118px 88px 0 }`.
 
 1. `.eyebrow`, a 9px accent dot + owner. IBM Plex Mono 500 15px,
    letter-spacing .22em, uppercase, `--muted`.
@@ -27,8 +27,8 @@ Structure, top to bottom, all inside `.card { padding:118px 88px 0 }`:
    max-width 660px.
 4. `.meta`, an absolutely positioned bottom strip. `left:0; right:0;
    bottom:0; margin:0 88px; padding:22px 0 64px; background:var(--paper);
-   border-top:1px solid var(--hair)`. The opaque background is mandatory:
-   it is what stops the arcs at the rule. Items: 10px language dot in
+   border-top:1px solid var(--hair)`. The opaque background is mandatory
+   because it stops the arcs at the rule. Items include a 10px language dot in
    accent + language name, then license. Mono 500 15px, ls .14em,
    uppercase, gap 44px.
 
@@ -36,10 +36,10 @@ Structure, top to bottom, all inside `.card { padding:118px 88px 0 }`:
 
 SVG 420x420 pinned to the card's bottom-right corner, behind the meta
 strip. 4-6 `<circle>` centered at (420,420), stroke accent 2px, no fill.
-Vary per repo so two cards never match: hash = the first 8 hex digits
+Vary per repo so two cards never match. The hash is the first 8 hex digits
 of sha256(repo name) read as an integer. Arc count = 4 + hash % 3,
 radius step = 56 + hash % 14, starting at r=84. Opacities from the
-innermost circle (smallest radius) outward: .5 .36 .26 .17 .11 .07.
+innermost circle from smallest radius outward use .5 .36 .26 .17 .11 .07.
 No solid dot on the arcs. The title period is the single focal accent.
 
 ## Avatar (optional)
@@ -49,5 +49,5 @@ Base64 data URI only (`references/avatar.md`).
 
 ## CJK
 
-If the description is CJK: 30px/1.6, `word-break:keep-all` (Korean),
+If the description is CJK, use 30px/1.6 and `word-break:keep-all` for Korean,
 see `references/cjk.md`.

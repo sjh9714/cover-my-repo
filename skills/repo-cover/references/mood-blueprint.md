@@ -1,4 +1,4 @@
-# Mood: blueprint
+# Mood blueprint
 
 A technical drawing of the repo. Navy field, faint 32px grid, a hairline
 frame with corner ticks, everything in IBM Plex Mono. The only mood with
@@ -18,9 +18,9 @@ accent = language color, LIGHTENED to >=4.5:1 on bg (dark field!)
 ## Skeleton
 
 Copy `assets/examples/blueprint-macos-harness.html`. Inside
-`.card { background:bg; padding:128px 96px 0; font-family:'IBM Plex Mono' }`:
+`.card { background:bg; padding:128px 96px 0; font-family:'IBM Plex Mono' }` uses the following structure.
 
-1. Background grid: two `linear-gradient` layers, `background-size:32px
+1. The background grid uses two `linear-gradient` layers and `background-size:32px
    32px`, the single allowed gradient use in this skill.
 2. `.frame`, with `position:absolute; inset:40px; border:1px solid line`.
 3. Four `.corner` SVG ticks (24px L-shapes) rotated into each corner at
@@ -44,4 +44,4 @@ Copy `assets/examples/blueprint-macos-harness.html`. Inside
 
 - Mono everywhere. No Fraunces, no sans, no italics.
 - The grid must stay faint. Above .07 opacity the card dies.
-- Accent appears exactly twice: title underscore, language dot.
+- Accent appears exactly twice in the title underscore and language dot.

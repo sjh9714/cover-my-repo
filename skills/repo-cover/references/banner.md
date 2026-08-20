@@ -7,7 +7,7 @@ hero image, or header instead of a social preview.
 ## Skeleton
 
 Copy `assets/examples/banner-repo-cover.html`. Inside
-`.card { width:1280px; height:320px; padding:64px 72px 0; overflow:hidden }`:
+`.card { width:1280px; height:320px; padding:64px 72px 0; overflow:hidden }` uses the following structure.
 
 1. `.eyebrow`, an 8px accent dot + owner. Mono 500 13px, ls .22em,
    uppercase, `--muted`.

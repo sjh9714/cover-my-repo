@@ -1,4 +1,4 @@
-# Mood: gallery
+# Mood gallery
 
 A museum wall label. Pure white, everything centered, a light-weight
 Fraunces wordmark, one short accent rule. The quietest mood, for
@@ -15,7 +15,7 @@ background:#FFFFFF; --ink:#1D1A16; --muted:#6B655C;
 ## Skeleton
 
 Copy `assets/examples/gallery-cumora.html`. `.card` is a centered flex
-column, `padding-top:126px`, `text-align:center`:
+column with `padding-top:126px` and `text-align:center`.
 
 1. `.eyebrow`, the owner. Mono 500 14px, letter-spacing .3em (widest of
    all moods), uppercase, `--muted`.
@@ -34,4 +34,4 @@ column, `padding-top:126px`, `text-align:center`:
   avatar, no watermark.
 - Weight 420 on the title is what separates this from editorial. Do not
   bold it.
-- Accent appears exactly twice: the rule, the language dot.
+- Accent appears exactly twice in the rule and language dot.

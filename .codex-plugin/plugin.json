@@ -1,6 +1,6 @@
 {
   "name": "repo-cover",
-  "description": "Create three GitHub social preview options, render them with local Chrome, and compare them before manual upload. Five moods, CJK-first typography, deterministic checks, and crisp PNG export.",
+  "description": "Design one GitHub social preview card with five moods, CJK-first typography, deterministic checks, and local Chrome export.",
   "version": "2.0.0",
   "author": {
     "name": "sjh9714",
@@ -23,8 +23,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Cover My Repo",
-    "shortDescription": "Three designed social preview options for a GitHub repository.",
-    "longDescription": "Cover My Repo creates three self-contained GitHub social preview options, checks them, renders them with local Chrome, and opens a comparison before manual upload.",
+    "shortDescription": "One designed social preview card for a GitHub repository.",
+    "longDescription": "The Cover My Repo skill designs one self-contained GitHub social preview card, checks it, and exports it with local Chrome for manual upload.",
     "developerName": "sjh9714",
     "category": "Productivity",
     "capabilities": [

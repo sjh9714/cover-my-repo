@@ -6,9 +6,9 @@ are ASCII); full-CJK titles also work.
 
 ## Font stacks
 
-- Korean: `'Noto Sans KR', sans-serif`, already in the default embed.
-- Japanese: swap the Google Fonts family to `Noto+Sans+JP`.
-- Chinese: `Noto+Sans+SC` (or TC). Load only the family you need.
+- Korean uses `'Noto Sans KR', sans-serif`, already in the default embed.
+- Japanese swaps the Google Fonts family to `Noto+Sans+JP`.
+- Chinese uses `Noto+Sans+SC` or TC. Load only the family you need.
 - Titles stay Fraunces for Latin names. A CJK repo name renders in the
   Noto family at the same size tier; drop `font-variation-settings`.
 
@@ -16,13 +16,13 @@ are ASCII); full-CJK titles also work.
 
 - Description size gets +1px and line-height 1.6 (CJK glyphs read
   smaller at equal size next to Latin).
-- Korean: `word-break:keep-all` so lines break between words, never
-  inside them. Japanese/Chinese: default breaking is correct; do NOT
+- Korean uses `word-break:keep-all` so lines break between words, never
+  inside them. Japanese and Chinese use default breaking. Do NOT
   use keep-all.
 - Never letter-space CJK body text. The mono eyebrow may stay spaced
   only if it is ASCII.
-- Character budget: 60 per card (vs 110 Latin). Two lines max still.
-- Punctuation: Japanese and Chinese use their own marks (。 、 ·). Do
+- The character budget is 60 per card, compared with 110 for Latin. Keep two lines max.
+- Japanese and Chinese use their own punctuation marks (。 、 ·). Do
   not swap them for Latin periods. Korean orthography uses the Latin
   period and comma; do not force 。 into Korean text.
 

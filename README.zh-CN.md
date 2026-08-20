@@ -12,7 +12,7 @@
 npx cover-my-repo
 ```
 
-在 Git 仓库内运行。它会检测已登录的 Codex、Claude 或 Cursor CLI，生成
+在 Git 仓库内运行。它会检测已登录的 Codex 或 Cursor CLI，生成
 三个设计方案，使用本机 Chrome 渲染，然后打开对比页面。
 
 它不使用图像模型，也不会传递仓库凭据。
@@ -23,14 +23,14 @@ npx cover-my-repo
 
 ![五种风格](docs/hero.png)
 
-![GitHub 默认图片与 Cover My Repo 对比](docs/compare.png)
+![常见生成器模板与 Cover My Repo 对比](docs/compare.png)
 
 ## 生成内容
 
 - 三个自包含 HTML 设计方案
 - 三张由本机 Chrome 渲染的 1280x640 PNG
 - 同时展示原尺寸与信息流尺寸的对比页面
-- 对比度、溢出、CJK 换行和画布尺寸的确定性检查
+- 对比度、CJK 换行和画布尺寸的确定性检查
 
 最后的 GitHub 上传不会由 CLI 代劳。
 
@@ -71,7 +71,6 @@ codex plugin add repo-cover@repo-cover
 
 ## 检查规则
 
-- 所有坐标和尺寸都使用 4px 网格
 - 每张卡片只用一个强调色并满足 WCAG 对比度
 - 按名称长度使用 132px 到 64px 的标题字号
 - 描述限制为 110 字符，CJK 限制为 60 字符

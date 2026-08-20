@@ -12,7 +12,7 @@
 npx cover-my-repo
 ```
 
-Git 레포 안에서 실행합니다. 로그인된 Codex, Claude, Cursor CLI를 찾아
+Git 레포 안에서 실행합니다. 로그인된 Codex나 Cursor CLI를 찾아
 디자인 세 가지를 만들고, 로컬 Chrome으로 렌더링한 뒤 비교 화면을 엽니다.
 
 이미지 모델을 쓰지 않으며 레포 인증 정보를 전달하지 않습니다.
@@ -23,14 +23,14 @@ Node.js 20과 Chrome이 필요합니다. GitHub의
 
 ![다섯 가지 무드](docs/hero.png)
 
-![GitHub 기본 이미지와 Cover My Repo 비교](docs/compare.png)
+![일반 생성기 템플릿과 Cover My Repo 비교](docs/compare.png)
 
 ## 만들어지는 파일
 
 - 자기완결 HTML 디자인 세 가지
 - 로컬 Chrome으로 렌더링한 1280x640 PNG 세 장
 - 원본 크기와 피드 크기를 함께 보는 비교 페이지
-- 대비, 넘침, CJK 줄바꿈, 캔버스 크기를 확인하는 결정적 검사
+- 대비, CJK 줄바꿈, 캔버스 크기를 확인하는 결정적 검사
 
 최종 GitHub 업로드는 CLI가 대신하지 않습니다.
 
@@ -76,7 +76,6 @@ pi install https://github.com/sjh9714/cover-my-repo
 
 ## 검사 규칙
 
-- 모든 좌표와 크기는 4px 그리드
 - 카드당 악센트 하나와 WCAG 대비
 - 132px부터 64px까지 이름 길이별 제목 크기
 - 설명 110자 예산과 CJK 60자 예산

@@ -1,4 +1,4 @@
-# Mood: poster
+# Mood poster
 
 A deep color field built from the repo's own accent, cream type, and the
 repo's first letter as a giant cropped watermark. The loudest mood.
@@ -12,16 +12,16 @@ lift  = blend(accent, #FFFFFF, 0.55)   // accent for period + meta dot
 cream = #FAF6EE                        // all type
 ```
 
-`blend(a, b, t)` mixes each RGB channel: `a + (b - a) * t`.
+`blend(a, b, t)` mixes each RGB channel with `a + (b - a) * t`.
 
 ## Skeleton
 
 Copy `assets/examples/poster-archify.html`. Structure inside
-`.card { background:deep; padding:118px 88px 0; overflow:hidden }`:
+`.card { background:deep; padding:118px 88px 0; overflow:hidden }` uses the following structure.
 
 1. `.glyph`, the first letter of the repo name, uppercase. Fraunces 600,
    660px, cream at opacity .07, positioned `right:-48px; bottom:-190px`
-   so it crops off two edges. This is the per-repo variation: every
+   so it crops off two edges. This is the per-repo variation and every
    repo gets a different letterform.
 2. `.eyebrow`, the owner. Mono 500 15px, ls .22em, uppercase, cream at .72.
 3. `.title`, as editorial (Fraunces 560, opsz 144) but cream, with the

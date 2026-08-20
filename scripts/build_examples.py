@@ -260,7 +260,7 @@ def terminal(owner, name, desc, accent, metas):
 """
     return head(css) + f"""<div class="card"><div class="win">
 <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>
-<span class="wtitle">{owner}/{name} &mdash; zsh</span></div>
+<span class="wtitle">{owner}/{name} · zsh</span></div>
 <div class="body">
 <div class="prompt"><span class="sym">&#10095;</span> gh repo view {owner}/{name}</div>
 <h1 class="title">{name}<span class="cursor"></span></h1>

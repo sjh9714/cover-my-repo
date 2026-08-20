@@ -49,9 +49,14 @@ def check(path: str) -> bool:
 
     # self-contained: only Google Fonts may be external
     for url in re.findall(r"https?://[^\s\"'()]+", src):
-        host = url.split("/")[2]
+        host = url.split("/")[2].rstrip(";")
         if host not in ("fonts.googleapis.com", "fonts.gstatic.com"):
             fail(f"external resource not allowed: {host}")
+
+    if re.search(r"<(?:script|iframe|object|embed|base)\b|\son[a-z]+\s*=|"
+                 r"<meta\b[^>]*http-equiv\s*=\s*[\"']?refresh\b|javascript\s*:",
+                 src, re.I):
+        fail("active content is not allowed")
 
     # forbidden styling
     for pat, name in [(r"box-shadow", "box-shadow"),
@@ -97,15 +102,13 @@ def check(path: str) -> bool:
     accent = re.search(r"\.(?:stop|rule)\{[^}]*?(?:color|background):(#[0-9A-Fa-f]{6})", src, re.S)
     if bg and accent:
         ratio = contrast(bg.group(1), accent.group(1))
-        if ratio < 3.0:
-            fail(f"accent contrast {ratio:.2f}:1 < 3.0:1 on {bg.group(1)}")
-        elif ratio < 4.5:
-            warn(f"accent contrast {ratio:.2f}:1 — aim for 4.5:1")
+        if ratio < 4.5:
+            fail(f"accent contrast {ratio:.2f}:1 < 4.5:1 on {bg.group(1)}")
 
     # downscale legibility
     for msize in re.findall(r"\.meta\{[^}]*?font:[^;]*?\b(\d+)px", src, re.S):
         if int(msize) < 14:
-            warn(f"meta text {msize}px — illegible at X's 506px card width")
+            warn(f"meta text {msize}px is illegible at X's 506px card width")
 
     print(f"{'PASS' if ok else 'FAIL'}  {path}")
     return ok

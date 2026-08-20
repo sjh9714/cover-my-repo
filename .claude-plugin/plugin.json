@@ -1,7 +1,7 @@
 {
   "name": "repo-cover",
   "displayName": "Cover My Repo",
-  "description": "Create three GitHub social preview options, render them with local Chrome, and compare them before manual upload. Five moods, CJK-first typography, deterministic checks, and crisp PNG export.",
+  "description": "Design one GitHub social preview card with five moods, CJK-first typography, deterministic checks, and local Chrome export.",
   "version": "2.0.0",
   "author": {
     "name": "sjh9714",
