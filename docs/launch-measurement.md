@@ -27,6 +27,10 @@ Tracked referral visits come from GitHub traffic referrers for the launch pages 
 | GitHub | https://github.com/sjh9714/cover-my-repo | Renamed and released |
 | GitHub release | https://github.com/sjh9714/cover-my-repo/releases/tag/v2.0.0 | Published |
 | npm | https://www.npmjs.com/package/cover-my-repo | 0.1.1 published |
-| GeekNews | https://news.hada.io/topic?id=32651 | Pending |
-| Zenn | https://zenn.dev/sjh9714/articles/96a33c56dc5307 | Pending |
-| DEV | https://dev.to/sjh9714/your-ogimage-renders-tofu-cjk-safe-github-social-cards-written-by-your-coding-agent-1oon | Pending |
+| GeekNews | https://news.hada.io/topic?id=32651#cid63827 | v2 comment live |
+| Zenn | https://zenn.dev/sjh9714/articles/96a33c56dc5307 | Article updated in place |
+| DEV | https://dev.to/sjh9714/your-ogimage-renders-tofu-cjk-safe-github-social-cards-written-by-your-coding-agent-1oon | Article updated in place |
+| Product Hunt | https://www.producthunt.com/products/repo-cover | Product details and maker comment updated |
+| Reddit | https://www.reddit.com/r/coolgithubprojects/comments/1vtmaz0/i_made_a_cli_that_lets_codex_or_cursor_design/ | Visual link post live |
+
+All five external updates were verified on their public pages by 2026-08-21 00:16 KST.
