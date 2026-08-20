@@ -2,7 +2,7 @@
 
 import { cpSync, existsSync, mkdtempSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, isAbsolute, join, relative, resolve, win32 } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, resolve, win32 } from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -11,6 +11,7 @@ const require = createRequire(import.meta.url);
 const { version } = require('../package.json');
 const agents = ['codex', 'claude', 'cursor'];
 const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+const maxPngBytes = 1024 * 1024;
 const moduleDirectory = dirname(fileURLToPath(import.meta.url));
 const skillDirectory = resolve(moduleDirectory, '../skills/repo-cover');
 const requiredCards = ['editorial.html', 'poster.html', 'adaptive.html'];
@@ -124,7 +125,7 @@ function staysWithin(parent, child) {
 function outputDirectory(cwd, output) {
   if (output && (isAbsolute(output) || output.split(/[\\/]+/).includes('..'))) throw new Error('Output directory must stay within the target repository');
   const target = realpathSync(cwd);
-  const requested = resolve(target, output || 'cover-my-repo');
+  const requested = resolve(target, output || 'cover-my-repo-output');
   if (!staysWithin(target, requested)) throw new Error('Output directory must stay within the target repository');
   mkdirSync(requested, { recursive: true });
   const actual = realpathSync(requested);
@@ -141,8 +142,9 @@ function localRepository(cwd) {
   }
 }
 
-export async function generateCards({ agent = 'auto', cwd = process.cwd(), env = process.env, fetch = globalThis.fetch, output = null, repository = null } = {}) {
+export async function generateCards({ agent = 'auto', cwd = process.cwd(), env = process.env, chrome = findChrome({ env }), fetch = globalThis.fetch, output = 'cover-my-repo-output', repository = null } = {}) {
   if (agent !== 'auto' && !agents.includes(agent)) throw new Error('Invalid agent');
+  validateChrome(chrome);
   const candidates = agent === 'auto' ? agents : [agent];
   const authenticated = Object.fromEntries(candidates.map((name) => [name, hasAuthenticatedStatus(name, env)]));
   const selectedAgent = selectAuthenticatedAgent(agent, authenticated);
@@ -156,8 +158,12 @@ export async function generateCards({ agent = 'auto', cwd = process.cwd(), env =
     if (result.status !== 0) throw new Error(`${selectedAgent} failed to generate cards`);
     const cards = requiredCards.map((name) => ({ name, html: readFileSync(join(stage, name), 'utf8') }));
     for (const card of cards) validateCardHtml(card.html);
+    renderCards({ chrome, htmlPaths: cards.map((card) => join(stage, card.name)), output: stage, repository });
     const destination = outputDirectory(cwd, output);
     for (const card of cards) writeFileSync(join(destination, card.name), card.html);
+    for (const name of [...requiredCards.map((name) => name.replace(/\.html$/, '.png')), 'index.html']) {
+      cpSync(join(stage, name), join(destination, name));
+    }
     return cards.map((card) => join(destination, card.name));
   } finally {
     rmSync(stage, { recursive: true, force: true });
@@ -182,7 +188,7 @@ export function parseOptions(args) {
     agent: 'auto',
     help: false,
     open: true,
-    output: null,
+    output: 'cover-my-repo-output',
     repository: null,
     version: false,
   };
@@ -249,7 +255,56 @@ export function validatePngDimensions(png, width = 1280, height = 640) {
   if (png.readUInt32BE(16) !== width || png.readUInt32BE(20) !== height) {
     throw new Error(`PNG must be ${width} by ${height}`);
   }
+  if (png.length > maxPngBytes) throw new Error('PNG must not exceed 1 MiB');
   return true;
+}
+
+function validateChrome(chrome) {
+  if (!chrome) throw new Error('Chrome is required to render cards');
+  const result = spawnSync(chrome, ['--version'], { encoding: 'utf8' });
+  if (result.status !== 0) throw new Error('Chrome is unavailable');
+}
+
+function previewHtml(names, repository) {
+  const settings = repository && `https://github.com/${encodeURIComponent(repository.owner)}/${encodeURIComponent(repository.repo)}/settings`;
+  const cards = names.map((name) => {
+    const title = name.replace(/\.png$/, '');
+    return `<section><h2>${title}</h2><p><a href="${name}">Open PNG</a></p><img src="${name}" alt="${title} full-size preview" width="1280"><img src="${name}" alt="${title} 506 pixel preview" width="506"></section>`;
+  }).join('');
+  return `<!doctype html><html><head><meta charset="utf-8"><title>Cover My Repo previews</title><style>body{font-family:sans-serif;margin:24px}section{margin:0 0 32px}img{display:block;height:auto;margin:12px 0;max-width:100%}</style></head><body><h1>Cover My Repo previews</h1>${settings ? `<p><a href="${settings}">GitHub social preview settings</a></p>` : ''}${cards}</body></html>`;
+}
+
+export function renderCards({ chrome, htmlPaths, output, repository = null }) {
+  const pngPaths = htmlPaths.map((htmlPath) => {
+    const pngPath = join(output, `${basename(htmlPath).replace(/\.html$/, '')}.png`);
+    const result = spawnSync(chrome, [
+      '--headless=new',
+      '--no-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--hide-scrollbars',
+      '--window-size=1280,640',
+      '--virtual-time-budget=9000',
+      `--screenshot=${pngPath}`,
+      pathToFileURL(htmlPath).href,
+    ], { encoding: 'utf8' });
+    if (result.status !== 0) throw new Error(`Chrome failed to render ${htmlPath}`);
+    if (!existsSync(pngPath)) throw new Error(`Chrome did not create ${pngPath}`);
+    validatePngDimensions(readFileSync(pngPath));
+    return pngPath;
+  });
+  writeFileSync(join(output, 'index.html'), previewHtml(pngPaths.map((pngPath) => basename(pngPath)), repository));
+  return pngPaths;
+}
+
+export function openOutputs({ output, repository = null, platform = process.platform, spawn = spawnSync }) {
+  const targets = [join(output, 'index.html'), output];
+  if (repository) targets.push(`https://github.com/${encodeURIComponent(repository.owner)}/${encodeURIComponent(repository.repo)}/settings`);
+  for (const target of targets) {
+    if (platform === 'darwin') spawn('open', [target]);
+    else if (platform === 'linux') spawn('xdg-open', [target]);
+    else if (platform === 'win32') spawn('cmd', ['/c', 'start', '', target]);
+  }
 }
 
 export function validateCardHtml(html) {
@@ -271,12 +326,16 @@ export function validateCardHtml(html) {
   return true;
 }
 
-export async function main(args = process.argv.slice(2), write = console.log, cwd = process.cwd()) {
+export async function main(args = process.argv.slice(2), write = console.log, cwd = process.cwd(), dependencies = {}) {
   const options = parseOptions(args);
   if (options.help) write('Run cover-my-repo [owner/repo] [--agent auto|codex|claude|cursor] [--output <dir>] [--no-open]');
   if (options.version) write(version);
   if (options.help || options.version) return options;
-  return generateCards({ ...options, cwd, repository: options.repository || localRepository(cwd) });
+  const { chrome, env = process.env, fetch = globalThis.fetch, open = openOutputs } = dependencies;
+  const repository = options.repository || localRepository(cwd);
+  const cards = await generateCards({ ...options, chrome, cwd, env, fetch, repository });
+  if (options.open) open({ output: dirname(cards[0]), repository });
+  return cards;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

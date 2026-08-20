@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { chmodSync, existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -8,8 +8,10 @@ import {
   findChrome,
   generateCards,
   main,
+  openOutputs,
   parseOptions,
   parseRepository,
+  renderCards,
   selectAuthenticatedAgent,
   validateCardHtml,
   validatePngDimensions,
@@ -62,7 +64,7 @@ function temporaryRepository(options = {}) {
   writeFileSync(join(target, 'package.json'), JSON.stringify({ name: 'target', description: 'local fallback facts' }));
   for (let index = 0; index < 201; index += 1) writeFileSync(join(target, `file-${index}`), '');
   const log = fakeAgent(join(directory, 'bin'), { context: options.context || 'remote metadata facts', cursorStatus: options.cursorStatus, invalid: options.invalid, target });
-  return { directory, log, target };
+  return { chrome: fakeChrome(join(directory, 'bin')).executable, directory, log, target };
 }
 
 function pngHeader(width, height) {
@@ -73,6 +75,30 @@ function pngHeader(width, height) {
   png.writeUInt32BE(width, 16);
   png.writeUInt32BE(height, 20);
   return png;
+}
+
+function fakeChrome(directory, { fail = false, missing = false } = {}) {
+  const log = join(directory, 'chrome.log');
+  const executable = join(directory, 'chrome');
+  writeFileSync(executable, `#!/usr/bin/env node
+import { appendFileSync, writeFileSync } from 'node:fs';
+
+const args = process.argv.slice(2);
+appendFileSync(${JSON.stringify(log)}, args.join(' ') + '\\n');
+if (${fail}) process.exit(1);
+const screenshot = args.find((arg) => arg.startsWith('--screenshot='));
+if (!${missing} && screenshot) {
+  const png = Buffer.alloc(24);
+  png.set([137, 80, 78, 71, 13, 10, 26, 10]);
+  png.writeUInt32BE(13, 8);
+  png.write('IHDR', 12);
+  png.writeUInt32BE(1280, 16);
+  png.writeUInt32BE(640, 20);
+  writeFileSync(screenshot.slice('--screenshot='.length), png);
+}
+`);
+  chmodSync(executable, 0o755);
+  return { executable, log };
 }
 
 test('parses GitHub HTTPS remotes', () => {
@@ -110,6 +136,7 @@ test('parses public options', () => {
     },
   );
   assert.throws(() => parseOptions(['--agent', 'unknown']));
+  assert.equal(parseOptions([]).output, 'cover-my-repo-output');
 });
 
 test('selects the requested authenticated agent or the first available agent', () => {
@@ -147,6 +174,119 @@ test('finds Chrome in supported system locations', () => {
 test('validates 1280 by 640 PNG dimensions', () => {
   assert.equal(validatePngDimensions(pngHeader(1280, 640)), true);
   assert.throws(() => validatePngDimensions(pngHeader(640, 1280)));
+  assert.throws(() => validatePngDimensions(Buffer.concat([pngHeader(1280, 640), Buffer.alloc(1024 * 1024)])));
+});
+
+test('renders all cards with Chrome flags and creates a comparison page', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'cover-my-repo-render-'));
+  try {
+    const { executable, log } = fakeChrome(directory);
+    const htmlPaths = ['editorial.html', 'poster.html', 'adaptive.html'].map((name) => {
+      const path = join(directory, name);
+      writeFileSync(path, html(name.slice(0, -5)));
+      return path;
+    });
+
+    const pngPaths = renderCards({ chrome: executable, htmlPaths, output: directory, repository: { owner: 'octo-org', repo: 'target' } });
+
+    assert.deepEqual(pngPaths.map((path) => path.split('/').pop()), ['editorial.png', 'poster.png', 'adaptive.png']);
+    for (const path of pngPaths) assert.equal(validatePngDimensions(readFileSync(path)), true);
+    const index = readFileSync(join(directory, 'index.html'), 'utf8');
+    assert.match(index, /editorial\.png/);
+    assert.match(index, /width="506"/);
+    assert.match(index, /https:\/\/github\.com\/octo-org\/target\/settings/);
+    const commands = readFileSync(log, 'utf8').trim().split('\n');
+    assert.equal(commands.length, 3);
+    for (const command of commands) {
+      assert.match(command, /--headless=new/);
+      assert.match(command, /--no-sandbox/);
+      assert.match(command, /--disable-dev-shm-usage/);
+      assert.match(command, /--disable-gpu/);
+      assert.match(command, /--hide-scrollbars/);
+      assert.match(command, /--window-size=1280,640/);
+      assert.match(command, /--virtual-time-budget=9000/);
+    }
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('rejects failed Chrome rendering and missing rendered PNG files', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'cover-my-repo-render-'));
+  try {
+    const htmlPath = join(directory, 'editorial.html');
+    writeFileSync(htmlPath, html('editorial'));
+    for (const options of [{ fail: true }, { missing: true }]) {
+      const { executable } = fakeChrome(directory, options);
+      assert.throws(() => renderCards({ chrome: executable, htmlPaths: [htmlPath], output: directory }), /failed to render|did not create/);
+    }
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('opens validated outputs with each supported platform command', () => {
+  const calls = [];
+  const spawn = (command, args) => calls.push([command, args]);
+  const repository = { owner: 'octo-org', repo: 'target' };
+  for (const [platform, command, args] of [
+    ['darwin', 'open', ['/tmp/cards/index.html']],
+    ['linux', 'xdg-open', ['/tmp/cards/index.html']],
+    ['win32', 'cmd', ['/c', 'start', '', '/tmp/cards/index.html']],
+  ]) {
+    calls.length = 0;
+    openOutputs({ output: '/tmp/cards', platform, repository, spawn });
+    assert.deepEqual(calls[0], [command, args]);
+    assert.equal(calls.length, 3);
+  }
+});
+
+test('does not call an agent when Chrome is unavailable', async () => {
+  const { directory, log, target } = temporaryRepository();
+  try {
+    await assert.rejects(
+      generateCards({
+        agent: 'codex',
+        chrome: null,
+        cwd: target,
+        env: { PATH: `${join(directory, 'bin')}:${process.env.PATH}` },
+      }),
+      /Chrome is required/,
+    );
+    assert.equal(existsSync(log), false);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('renders cards end to end with a fake agent and real Chrome without opening', async () => {
+  const { directory, log, target } = temporaryRepository();
+  const opened = [];
+  try {
+    const cards = await main(
+      ['octo-org/target', '--agent', 'codex', '--no-open'],
+      () => {},
+      target,
+      {
+        chrome: findChrome(),
+        env: { PATH: `${join(directory, 'bin')}:${process.env.PATH}` },
+        fetch: async () => ({ ok: true, json: async () => ({ description: 'remote metadata facts' }) }),
+        open: (...args) => opened.push(args),
+      },
+    );
+    const output = join(target, 'cover-my-repo-output');
+    assert.deepEqual(cards.map((path) => path.split('/').pop()), ['editorial.html', 'poster.html', 'adaptive.html']);
+    for (const name of ['editorial.png', 'poster.png', 'adaptive.png']) {
+      const path = join(output, name);
+      assert.equal(validatePngDimensions(readFileSync(path)), true);
+      assert.ok(statSync(path).size <= 1024 * 1024);
+    }
+    assert.match(readFileSync(join(output, 'index.html'), 'utf8'), /GitHub social preview settings/);
+    assert.equal(opened.length, 0);
+    assert.equal(readFileSync(log, 'utf8').trim().split('\n').length, 2);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
 });
 
 test('rejects malformed card HTML', () => {
@@ -182,10 +322,11 @@ test('parses Codex text and Claude JSON status while rejecting Cursor text statu
     ['claude', 'Not logged in', true],
     ['cursor', 'Not logged in', false],
   ]) {
-    const { directory, target } = temporaryRepository({ cursorStatus });
+    const { chrome, directory, target } = temporaryRepository({ cursorStatus });
     try {
       const generation = generateCards({
         agent,
+        chrome,
         cwd: target,
         env: { PATH: `${join(directory, 'bin')}:${process.env.PATH}` },
         fetch: async () => ({ ok: true, json: async () => ({ description: 'remote metadata facts' }) }),
@@ -202,10 +343,11 @@ test('parses Codex text and Claude JSON status while rejecting Cursor text statu
 
 test('generates validated cards through each staged agent adapter', async () => {
   for (const agent of ['codex', 'claude', 'cursor']) {
-    const { directory, log, target } = temporaryRepository();
+    const { chrome, directory, log, target } = temporaryRepository();
     try {
       const output = await generateCards({
         agent,
+        chrome,
         cwd: target,
         env: { PATH: `${join(directory, 'bin')}:${process.env.PATH}` },
         fetch: async () => ({ ok: true, json: async () => ({ description: 'remote metadata facts', language: 'JavaScript', license: { spdx_id: 'MIT' } }) }),
@@ -223,11 +365,12 @@ test('generates validated cards through each staged agent adapter', async () => 
 });
 
 test('does not copy any cards when one staged card is invalid', async () => {
-  const { directory, target } = temporaryRepository({ context: 'local fallback facts', invalid: true });
+  const { chrome, directory, target } = temporaryRepository({ context: 'local fallback facts', invalid: true });
   try {
     await assert.rejects(
       generateCards({
       agent: 'codex',
+      chrome,
       cwd: target,
       env: { PATH: `${join(directory, 'bin')}:${process.env.PATH}` },
       fetch: async () => { throw new Error('offline'); },
@@ -243,11 +386,12 @@ test('does not copy any cards when one staged card is invalid', async () => {
 });
 
 test('rejects parent-traversal output paths', async () => {
-  const { directory, target } = temporaryRepository();
+  const { chrome, directory, target } = temporaryRepository();
   try {
     await assert.rejects(
       generateCards({
         agent: 'codex',
+        chrome,
         cwd: target,
         env: { PATH: `${join(directory, 'bin')}:${process.env.PATH}` },
         fetch: async () => ({ ok: true, json: async () => ({ description: 'remote metadata facts' }) }),
@@ -262,10 +406,11 @@ test('rejects parent-traversal output paths', async () => {
 });
 
 test('allows the repository root as the output directory', async () => {
-  const { directory, target } = temporaryRepository();
+  const { chrome, directory, target } = temporaryRepository();
   try {
     await generateCards({
       agent: 'codex',
+      chrome,
       cwd: target,
       env: { PATH: `${join(directory, 'bin')}:${process.env.PATH}` },
       fetch: async () => ({ ok: true, json: async () => ({ description: 'remote metadata facts' }) }),
@@ -279,7 +424,7 @@ test('allows the repository root as the output directory', async () => {
 });
 
 test('rejects output symlinks that escape the target repository', async () => {
-  const { directory, target } = temporaryRepository();
+  const { chrome, directory, target } = temporaryRepository();
   const outside = join(directory, 'outside');
   mkdirSync(outside);
   symlinkSync(outside, join(target, 'cards'));
@@ -287,6 +432,7 @@ test('rejects output symlinks that escape the target repository', async () => {
     await assert.rejects(
       generateCards({
         agent: 'codex',
+        chrome,
         cwd: target,
         env: { PATH: `${join(directory, 'bin')}:${process.env.PATH}` },
         fetch: async () => ({ ok: true, json: async () => ({ description: 'remote metadata facts' }) }),
