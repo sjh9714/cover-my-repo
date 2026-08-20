@@ -30,7 +30,7 @@ Tracked referral visits come from GitHub traffic referrers for the launch pages 
 | GeekNews | https://news.hada.io/topic?id=32651#cid63827 | v2 comment live |
 | Zenn | https://zenn.dev/sjh9714/articles/96a33c56dc5307 | Article updated in place |
 | DEV | https://dev.to/sjh9714/your-ogimage-renders-tofu-cjk-safe-github-social-cards-written-by-your-coding-agent-1oon | Article updated in place |
-| Product Hunt | https://www.producthunt.com/products/repo-cover | Product details and maker comment updated |
+| Product Hunt | https://www.producthunt.com/products/repo-cover?launch=cover-my-repo | Product details and maker comment updated |
 | Reddit | https://www.reddit.com/r/coolgithubprojects/comments/1vtmaz0/i_made_a_cli_that_lets_codex_or_cursor_design/ | Visual link post live |
 
 All five external updates were verified on their public pages by 2026-08-21 00:16 KST.
