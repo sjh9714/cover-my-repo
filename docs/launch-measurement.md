@@ -4,7 +4,7 @@ The verified baseline before v2 was 4 GitHub stars at 2026-08-20 23:24 KST.
 
 | Checkpoint | Repository visitors | npm downloads | GitHub stars | Tracked referral visits | Confirmed uses |
 | --- | --- | --- | --- | --- | --- |
-| T0 |  | 0 | 4 |  |  |
+| T0 at 2026-08-20 23:46 KST |  | 0 | 4 |  |  |
 | T plus 24h |  |  |  |  |  |
 | T plus 72h |  |  |  |  |  |
 
@@ -24,7 +24,9 @@ Tracked referral visits come from GitHub traffic referrers for the launch pages 
 
 | Surface | URL | v2 update |
 | --- | --- | --- |
-| GitHub | https://github.com/sjh9714/repo-cover | Pending |
+| GitHub | https://github.com/sjh9714/cover-my-repo | Renamed and released |
+| GitHub release | https://github.com/sjh9714/cover-my-repo/releases/tag/v2.0.0 | Published |
+| npm | https://www.npmjs.com/package/cover-my-repo | 0.1.1 published |
 | GeekNews | https://news.hada.io/topic?id=32651 | Pending |
 | Zenn | https://zenn.dev/sjh9714/articles/96a33c56dc5307 | Pending |
 | DEV | https://dev.to/sjh9714/your-ogimage-renders-tofu-cjk-safe-github-social-cards-written-by-your-coding-agent-1oon | Pending |
