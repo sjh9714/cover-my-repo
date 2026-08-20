@@ -163,6 +163,7 @@ test('rejects complete cards that fail the generated card checker', () => {
   assert.throws(() => validateCardHtml('<!doctype html><html><head><title>Card</title><style>body { width: 1280px; height: 640px; box-shadow: 1px 1px; }</style></head><body><h1>Card</h1></body></html>'));
   assert.throws(() => validateCardHtml('<!doctype html><html><head><title>Card</title><style>body { width: 640px; height: 1280px; }</style></head><body><h1>Card</h1></body></html>'));
   assert.throws(() => validateCardHtml('<!doctype html><html><head><title>Card</title><style>body { width: 1280px; height: 640px; }</style><link href="https://example.com/card.css"></head><body><h1>Card</h1></body></html>'));
+  assert.throws(() => validateCardHtml('<!doctype html><html><head><title>Card</title><style>body { width: 1280px; height: 640px; }</style></head><body><h1>Card</h1><img src=https://evil.example/card.png></body></html>'));
   assert.throws(() => validateCardHtml('<!doctype html><html><head><title>Card</title><style>@import "https://example.com/card.css"; body { width: 1280px; height: 640px; }</style></head><body><h1>Card</h1></body></html>'));
   assert.throws(() => validateCardHtml('<!doctype html><html><head><title>Card</title><style>body { width: 1280px; height: 640px; }</style></head><body>Card</body></html>'));
 });
@@ -255,6 +256,23 @@ test('rejects parent-traversal output paths', async () => {
       }),
       /Output directory must stay within the target repository/,
     );
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('allows the repository root as the output directory', async () => {
+  const { directory, target } = temporaryRepository();
+  try {
+    await generateCards({
+      agent: 'codex',
+      cwd: target,
+      env: { PATH: `${join(directory, 'bin')}:${process.env.PATH}` },
+      fetch: async () => ({ ok: true, json: async () => ({ description: 'remote metadata facts' }) }),
+      output: '.',
+      repository: { owner: 'octo-org', repo: 'target' },
+    });
+    assert.equal(existsSync(join(target, 'editorial.html')), true);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

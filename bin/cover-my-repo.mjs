@@ -118,7 +118,7 @@ function hasAuthenticatedStatus(agent, env) {
 
 function staysWithin(parent, child) {
   const path = relative(parent, child);
-  return path !== '' && path !== '..' && !path.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`) && !isAbsolute(path);
+  return path === '' || (path !== '..' && !path.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`) && !isAbsolute(path));
 }
 
 function outputDirectory(cwd, output) {
@@ -259,7 +259,7 @@ export function validateCardHtml(html) {
   if (!/\bwidth\s*:\s*1280px\b/i.test(html) || !/\bheight\s*:\s*640px\b/i.test(html)) throw new Error('Card HTML must be 1280 by 640');
   if (!/<h1(?:\s[^>]*)?>[\s\S]*?<\/h1\s*>/i.test(html)) throw new Error('Card HTML must include an h1 title');
   if (/\b(?:box-shadow|text-shadow|drop-shadow|backdrop-filter|linear-gradient|radial-gradient|conic-gradient)\b/i.test(html)) throw new Error('Card HTML includes forbidden styles');
-  for (const match of html.matchAll(/(?:href|src)\s*=\s*["']\s*(?:https?:)?\/\/([^/"'\s)]+)/gi)) {
+  for (const match of html.matchAll(/(?:href|src)\s*=\s*(?:["']\s*)?(?:https?:)?\/\/([^/"'\s>]+)/gi)) {
     if (!['fonts.googleapis.com', 'fonts.gstatic.com'].includes(match[1].toLowerCase())) throw new Error('Card HTML includes an external resource');
   }
   for (const match of html.matchAll(/url\(\s*["']?\s*(?:https?:)?\/\/([^/"'\s)]+)/gi)) {

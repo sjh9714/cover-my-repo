@@ -158,3 +158,58 @@ No output
 - Agent processes receive only path and local keyring-config variables. Test paths and fake behavior are embedded in the generated fake executables.
 - Output rejects absolute and parent-traversal paths. It resolves the created output directory and rejects symlinks outside the real target directory before copying files.
 - Fake Codex, Claude, and Cursor executables validate their real generation arguments.
+
+## Fix Round 2
+
+### Covering test file
+
+`test/cover-my-repo.test.mjs`
+
+### RED
+
+```sh
+node --test --test-name-pattern='complete cards|repository root' test/cover-my-repo.test.mjs
+```
+
+```text
+# tests 2
+# pass 0
+# fail 2
+```
+
+The card checker accepted `img src=https://evil.example/card.png` without quotes. The output-root run rejected `--output .` with Output directory must stay within the target repository.
+
+### GREEN
+
+```sh
+node --test --test-name-pattern='complete cards|repository root' test/cover-my-repo.test.mjs
+```
+
+```text
+# tests 2
+# pass 2
+# fail 0
+```
+
+```sh
+npm test
+```
+
+```text
+# tests 17
+# pass 17
+# fail 0
+```
+
+```sh
+git diff --check
+```
+
+```text
+No output
+```
+
+### Changes
+
+- External-resource matching accepts quoted and unquoted `href` and `src` syntax while retaining the Google Fonts host allowance.
+- Exact real-path equality now counts as within the target repository. Parent traversal and output symlink escape checks remain unchanged.
