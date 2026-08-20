@@ -1,14 +1,147 @@
 #!/usr/bin/env node
 
-import { existsSync } from 'node:fs';
-import { win32 } from 'node:path';
+import { cpSync, existsSync, mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join, resolve, win32 } from 'node:path';
 import { createRequire } from 'node:module';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { spawnSync } from 'node:child_process';
 
 const require = createRequire(import.meta.url);
 const { version } = require('../package.json');
 const agents = ['codex', 'claude', 'cursor'];
 const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+const moduleDirectory = dirname(fileURLToPath(import.meta.url));
+const skillDirectory = resolve(moduleDirectory, '../skills/repo-cover');
+const requiredCards = ['editorial.html', 'poster.html', 'adaptive.html'];
+
+function boundedText(value, length) {
+  return String(value ?? '').slice(0, length);
+}
+
+function readFileIfPresent(path) {
+  try {
+    return existsSync(path) ? readFileSync(path, 'utf8') : '';
+  } catch {
+    return '';
+  }
+}
+
+function localRepositoryFacts(cwd) {
+  const manifestName = ['package.json', 'pyproject.toml', 'Cargo.toml', 'go.mod'].find((name) => existsSync(join(cwd, name)));
+  const manifest = manifestName ? readFileIfPresent(join(cwd, manifestName)) : '';
+  let packageFacts = {};
+  if (manifestName === 'package.json') {
+    try {
+      packageFacts = JSON.parse(manifest);
+    } catch {}
+  }
+  return {
+    manifest: manifest ? { name: manifestName, content: boundedText(manifest, 6000) } : null,
+    metadata: { description: packageFacts.description, name: packageFacts.name },
+    paths: readdirSync(cwd, { withFileTypes: true }).slice(0, 200).map((entry) => boundedText(entry.name, 32)),
+    readme: boundedText(readFileIfPresent(join(cwd, 'README.md')), 10000),
+  };
+}
+
+async function githubFacts(repository, fetch) {
+  if (!repository) return {};
+  const headers = { Accept: 'application/vnd.github+json', 'User-Agent': 'cover-my-repo' };
+  const baseUrl = `https://api.github.com/repos/${repository.owner}/${repository.repo}`;
+  try {
+    const metadataResponse = await fetch(baseUrl, { headers });
+    const metadata = metadataResponse.ok ? await metadataResponse.json() : {};
+    const readmeResponse = await fetch(`${baseUrl}/readme`, { headers });
+    const readmeData = readmeResponse.ok ? await readmeResponse.json() : {};
+    return {
+      metadata: {
+        description: metadata.description,
+        language: metadata.language,
+        license: metadata.license?.spdx_id,
+        name: metadata.name,
+      },
+      readme: readmeData.content ? Buffer.from(readmeData.content, 'base64').toString('utf8') : '',
+    };
+  } catch {
+    return {};
+  }
+}
+
+export async function collectRepositoryContext({ cwd = process.cwd(), fetch = globalThis.fetch, repository = null } = {}) {
+  const local = localRepositoryFacts(cwd);
+  const github = await githubFacts(repository, fetch);
+  return [
+    '# Repository context',
+    '## Metadata',
+    boundedText(JSON.stringify({ ...local.metadata, ...github.metadata, repository }), 2000),
+    '## README',
+    boundedText(github.readme || local.readme, 10000),
+    '## Manifest',
+    local.manifest ? `${local.manifest.name}\n${local.manifest.content}` : '',
+    '## Top-level paths',
+    local.paths.join('\n'),
+  ].join('\n');
+}
+
+function agentCommand(agent, prompt, status = false) {
+  const argumentsByAgent = {
+    claude: status ? ['auth', 'status'] : ['-p', prompt],
+    codex: status ? ['login', 'status'] : ['exec', '--skip-git-repo-check', prompt],
+    cursor: status ? ['status'] : ['--print', '--force', '--output-format', 'text', prompt],
+  };
+  return {
+    args: argumentsByAgent[agent],
+    command: agent === 'cursor' ? 'cursor-agent' : agent,
+  };
+}
+
+function agentEnvironment(env) {
+  const clean = { ...env };
+  for (const name of Object.keys(clean)) {
+    if (name === 'OLDPWD' || name === 'PWD' || name === 'SSH_AUTH_SOCK' || /api[_-]?key|token|secret|password|credential/i.test(name)) delete clean[name];
+  }
+  return clean;
+}
+
+function hasAuthenticatedStatus(agent, env) {
+  const { command, args } = agentCommand(agent, '', true);
+  const result = spawnSync(command, args, { encoding: 'utf8', env: agentEnvironment(env) });
+  const status = `${result.stdout || ''}\n${result.stderr || ''}`;
+  return result.status === 0 && /logged in|authenticated/i.test(status) && !/not (logged in|authenticated)|unauthenticated|login required/i.test(status);
+}
+
+function localRepository(cwd) {
+  const result = spawnSync('git', ['config', '--get', 'remote.origin.url'], { cwd, encoding: 'utf8' });
+  try {
+    return result.status === 0 ? parseRepository(result.stdout.trim()) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function generateCards({ agent = 'auto', cwd = process.cwd(), env = process.env, fetch = globalThis.fetch, output = null, repository = null } = {}) {
+  if (agent !== 'auto' && !agents.includes(agent)) throw new Error('Invalid agent');
+  const candidates = agent === 'auto' ? agents : [agent];
+  const authenticated = Object.fromEntries(candidates.map((name) => [name, hasAuthenticatedStatus(name, env)]));
+  const selectedAgent = selectAuthenticatedAgent(agent, authenticated);
+  const stage = mkdtempSync(join(tmpdir(), 'cover-my-repo-'));
+  try {
+    cpSync(skillDirectory, join(stage, 'skill'), { recursive: true });
+    writeFileSync(join(stage, 'repo-context.md'), await collectRepositoryContext({ cwd, fetch, repository }));
+    const prompt = 'Read repo-context.md and skill/SKILL.md. Create editorial.html, poster.html, and adaptive.html as complete self-contained card documents in this directory.';
+    const { command, args } = agentCommand(selectedAgent, prompt);
+    const result = spawnSync(command, args, { cwd: stage, encoding: 'utf8', env: agentEnvironment(env) });
+    if (result.status !== 0) throw new Error(`${selectedAgent} failed to generate cards`);
+    const cards = requiredCards.map((name) => ({ name, html: readFileSync(join(stage, name), 'utf8') }));
+    for (const card of cards) validateCardHtml(card.html);
+    const outputDirectory = resolve(cwd, output || 'cover-my-repo');
+    mkdirSync(outputDirectory, { recursive: true });
+    for (const card of cards) writeFileSync(join(outputDirectory, card.name), card.html);
+    return cards.map((card) => join(outputDirectory, card.name));
+  } finally {
+    rmSync(stage, { recursive: true, force: true });
+  }
+}
 
 export function parseRepository(value) {
   if (typeof value !== 'string') throw new Error('Repository must be a string');
@@ -105,18 +238,17 @@ export function validateCardHtml(html) {
   return true;
 }
 
-export function main(args = process.argv.slice(2), write = console.log) {
+export async function main(args = process.argv.slice(2), write = console.log, cwd = process.cwd()) {
   const options = parseOptions(args);
   if (options.help) write('Run cover-my-repo [owner/repo] [--agent auto|codex|claude|cursor] [--output <dir>] [--no-open]');
   if (options.version) write(version);
-  return options;
+  if (options.help || options.version) return options;
+  return generateCards({ ...options, cwd, repository: options.repository || localRepository(cwd) });
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  try {
-    main();
-  } catch (error) {
+  main().catch((error) => {
     console.error(error.message);
     process.exitCode = 1;
-  }
+  });
 }
