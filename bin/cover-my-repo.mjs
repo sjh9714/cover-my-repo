@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { cpSync, existsSync, mkdtempSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, lstatSync, mkdtempSync, mkdirSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join, relative, resolve, win32 } from 'node:path';
 import { createRequire } from 'node:module';
@@ -122,15 +122,50 @@ function staysWithin(parent, child) {
   return path === '' || (path !== '..' && !path.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`) && !isAbsolute(path));
 }
 
+function destinationExists(path) {
+  try {
+    lstatSync(path);
+    return true;
+  } catch (error) {
+    if (error.code === 'ENOENT') return false;
+    throw error;
+  }
+}
+
 function outputDirectory(cwd, output) {
   if (output && (isAbsolute(output) || output.split(/[\\/]+/).includes('..'))) throw new Error('Output directory must stay within the target repository');
   const target = realpathSync(cwd);
   const requested = resolve(target, output || 'cover-my-repo-output');
-  if (!staysWithin(target, requested)) throw new Error('Output directory must stay within the target repository');
-  mkdirSync(requested, { recursive: true });
-  const actual = realpathSync(requested);
-  if (!staysWithin(target, actual)) throw new Error('Output directory must stay within the target repository');
-  return actual;
+  if (requested === target || !staysWithin(target, requested)) throw new Error('Output directory must stay within the target repository');
+  if (destinationExists(requested)) {
+    try {
+      if (!staysWithin(target, realpathSync(requested))) throw new Error('Output directory must stay within the target repository');
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
+    throw new Error('Output directory already exists');
+  }
+  return { target, destination: requested };
+}
+
+function publishCards(stage, output) {
+  const parent = dirname(output.destination);
+  let existingParent = parent;
+  while (!existsSync(existingParent)) existingParent = dirname(existingParent);
+  if (!staysWithin(output.target, realpathSync(existingParent))) throw new Error('Output directory must stay within the target repository');
+  mkdirSync(parent, { recursive: true });
+  if (!staysWithin(output.target, realpathSync(parent))) throw new Error('Output directory must stay within the target repository');
+  if (destinationExists(output.destination)) throw new Error('Output directory already exists');
+  const temporary = mkdtempSync(join(parent, `.${basename(output.destination)}-`));
+  try {
+    for (const name of [...requiredCards, ...requiredCards.map((name) => name.replace(/\.html$/, '.png')), 'index.html']) {
+      cpSync(join(stage, name), join(temporary, name));
+    }
+    renameSync(temporary, output.destination);
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
+  return output.destination;
 }
 
 function localRepository(cwd) {
@@ -144,6 +179,7 @@ function localRepository(cwd) {
 
 export async function generateCards({ agent = 'auto', cwd = process.cwd(), env = process.env, chrome = findChrome({ env }), fetch = globalThis.fetch, output = 'cover-my-repo-output', repository = null } = {}) {
   if (agent !== 'auto' && !agents.includes(agent)) throw new Error('Invalid agent');
+  const destination = outputDirectory(cwd, output);
   validateChrome(chrome);
   const candidates = agent === 'auto' ? agents : [agent];
   const authenticated = Object.fromEntries(candidates.map((name) => [name, hasAuthenticatedStatus(name, env)]));
@@ -159,12 +195,8 @@ export async function generateCards({ agent = 'auto', cwd = process.cwd(), env =
     const cards = requiredCards.map((name) => ({ name, html: readFileSync(join(stage, name), 'utf8') }));
     for (const card of cards) validateCardHtml(card.html);
     renderCards({ chrome, htmlPaths: cards.map((card) => join(stage, card.name)), output: stage, repository });
-    const destination = outputDirectory(cwd, output);
-    for (const card of cards) writeFileSync(join(destination, card.name), card.html);
-    for (const name of [...requiredCards.map((name) => name.replace(/\.html$/, '.png')), 'index.html']) {
-      cpSync(join(stage, name), join(destination, name));
-    }
-    return cards.map((card) => join(destination, card.name));
+    const published = publishCards(stage, destination);
+    return cards.map((card) => join(published, card.name));
   } finally {
     rmSync(stage, { recursive: true, force: true });
   }
@@ -303,7 +335,7 @@ export function openOutputs({ output, repository = null, platform = process.plat
   for (const target of targets) {
     if (platform === 'darwin') spawn('open', [target]);
     else if (platform === 'linux') spawn('xdg-open', [target]);
-    else if (platform === 'win32') spawn('cmd', ['/c', 'start', '', target]);
+    else if (platform === 'win32') spawn('explorer.exe', [target]);
   }
 }
 

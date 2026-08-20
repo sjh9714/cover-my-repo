@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { chmodSync, existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -77,7 +77,7 @@ function pngHeader(width, height) {
   return png;
 }
 
-function fakeChrome(directory, { fail = false, missing = false } = {}) {
+function fakeChrome(directory, { fail = false, height = 640, missing = false, oversized = false, width = 1280 } = {}) {
   const log = join(directory, 'chrome.log');
   const executable = join(directory, 'chrome');
   writeFileSync(executable, `#!/usr/bin/env node
@@ -85,6 +85,7 @@ import { appendFileSync, writeFileSync } from 'node:fs';
 
 const args = process.argv.slice(2);
 appendFileSync(${JSON.stringify(log)}, args.join(' ') + '\\n');
+if (args.includes('--version')) process.exit(0);
 if (${fail}) process.exit(1);
 const screenshot = args.find((arg) => arg.startsWith('--screenshot='));
 if (!${missing} && screenshot) {
@@ -92,9 +93,10 @@ if (!${missing} && screenshot) {
   png.set([137, 80, 78, 71, 13, 10, 26, 10]);
   png.writeUInt32BE(13, 8);
   png.write('IHDR', 12);
-  png.writeUInt32BE(1280, 16);
-  png.writeUInt32BE(640, 20);
-  writeFileSync(screenshot.slice('--screenshot='.length), png);
+  png.writeUInt32BE(${width}, 16);
+  png.writeUInt32BE(${height}, 20);
+  if (${oversized}) writeFileSync(screenshot.slice('--screenshot='.length), Buffer.concat([png, Buffer.alloc(1024 * 1024)]));
+  else writeFileSync(screenshot.slice('--screenshot='.length), png);
 }
 `);
   chmodSync(executable, 0o755);
@@ -211,14 +213,14 @@ test('renders all cards with Chrome flags and creates a comparison page', () => 
   }
 });
 
-test('rejects failed Chrome rendering and missing rendered PNG files', () => {
+test('rejects failed, missing, wrong-sized, and oversized Chrome renders', () => {
   const directory = mkdtempSync(join(tmpdir(), 'cover-my-repo-render-'));
   try {
     const htmlPath = join(directory, 'editorial.html');
     writeFileSync(htmlPath, html('editorial'));
-    for (const options of [{ fail: true }, { missing: true }]) {
+    for (const options of [{ fail: true }, { missing: true }, { width: 640 }, { oversized: true }]) {
       const { executable } = fakeChrome(directory, options);
-      assert.throws(() => renderCards({ chrome: executable, htmlPaths: [htmlPath], output: directory }), /failed to render|did not create/);
+      assert.throws(() => renderCards({ chrome: executable, htmlPaths: [htmlPath], output: directory }), /failed to render|did not create|PNG must/);
     }
   } finally {
     rmSync(directory, { recursive: true, force: true });
@@ -232,13 +234,29 @@ test('opens validated outputs with each supported platform command', () => {
   for (const [platform, command, args] of [
     ['darwin', 'open', ['/tmp/cards/index.html']],
     ['linux', 'xdg-open', ['/tmp/cards/index.html']],
-    ['win32', 'cmd', ['/c', 'start', '', '/tmp/cards/index.html']],
+    ['win32', 'explorer.exe', ['/tmp/cards/index.html']],
   ]) {
     calls.length = 0;
     openOutputs({ output: '/tmp/cards', platform, repository, spawn });
     assert.deepEqual(calls[0], [command, args]);
     assert.equal(calls.length, 3);
   }
+});
+
+test('opens hostile Windows targets as single explorer.exe arguments', () => {
+  const output = join(tmpdir(), 'cards & echo hostile');
+  const calls = [];
+  openOutputs({
+    output,
+    platform: 'win32',
+    repository: { owner: 'octo-org', repo: 'target' },
+    spawn: (command, args) => calls.push([command, args]),
+  });
+  assert.deepEqual(calls, [
+    ['explorer.exe', [join(output, 'index.html')]],
+    ['explorer.exe', [output]],
+    ['explorer.exe', ['https://github.com/octo-org/target/settings']],
+  ]);
 });
 
 test('does not call an agent when Chrome is unavailable', async () => {
@@ -254,6 +272,29 @@ test('does not call an agent when Chrome is unavailable', async () => {
       /Chrome is required/,
     );
     assert.equal(existsSync(log), false);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('leaves no final or temporary output directory after a failed render', async () => {
+  const { directory, target } = temporaryRepository();
+  try {
+    const { executable } = fakeChrome(join(directory, 'bin'), { fail: true });
+    await assert.rejects(
+      generateCards({
+        agent: 'codex',
+        chrome: executable,
+        cwd: target,
+        env: { PATH: `${join(directory, 'bin')}:${process.env.PATH}` },
+        fetch: async () => ({ ok: true, json: async () => ({ description: 'remote metadata facts' }) }),
+        output: 'cards',
+        repository: { owner: 'octo-org', repo: 'target' },
+      }),
+      /failed to render/,
+    );
+    assert.equal(existsSync(join(target, 'cards')), false);
+    assert.deepEqual(readdirSync(target).filter((name) => name.startsWith('.cards-')), []);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
@@ -405,19 +446,64 @@ test('rejects parent-traversal output paths', async () => {
   }
 });
 
-test('allows the repository root as the output directory', async () => {
+test('rejects the repository root as the output directory', async () => {
   const { chrome, directory, target } = temporaryRepository();
   try {
-    await generateCards({
-      agent: 'codex',
-      chrome,
-      cwd: target,
-      env: { PATH: `${join(directory, 'bin')}:${process.env.PATH}` },
-      fetch: async () => ({ ok: true, json: async () => ({ description: 'remote metadata facts' }) }),
-      output: '.',
-      repository: { owner: 'octo-org', repo: 'target' },
-    });
-    assert.equal(existsSync(join(target, 'editorial.html')), true);
+    await assert.rejects(
+      generateCards({
+        agent: 'codex',
+        chrome,
+        cwd: target,
+        env: { PATH: `${join(directory, 'bin')}:${process.env.PATH}` },
+        fetch: async () => ({ ok: true, json: async () => ({ description: 'remote metadata facts' }) }),
+        output: '.',
+        repository: { owner: 'octo-org', repo: 'target' },
+      }),
+      /Output directory must stay within the target repository/,
+    );
+    assert.equal(existsSync(join(target, 'editorial.html')), false);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('rejects an existing output directory', async () => {
+  const { chrome, directory, target } = temporaryRepository();
+  try {
+    mkdirSync(join(target, 'cards'));
+    await assert.rejects(
+      generateCards({
+        agent: 'codex',
+        chrome,
+        cwd: target,
+        env: { PATH: `${join(directory, 'bin')}:${process.env.PATH}` },
+        fetch: async () => ({ ok: true, json: async () => ({ description: 'remote metadata facts' }) }),
+        output: 'cards',
+        repository: { owner: 'octo-org', repo: 'target' },
+      }),
+      /Output directory already exists/,
+    );
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('rejects a broken output symlink', async () => {
+  const { chrome, directory, target } = temporaryRepository();
+  try {
+    symlinkSync(join(directory, 'missing'), join(target, 'cards'));
+    await assert.rejects(
+      generateCards({
+        agent: 'codex',
+        chrome,
+        cwd: target,
+        env: { PATH: `${join(directory, 'bin')}:${process.env.PATH}` },
+        fetch: async () => ({ ok: true, json: async () => ({ description: 'remote metadata facts' }) }),
+        output: 'cards',
+        repository: { owner: 'octo-org', repo: 'target' },
+      }),
+      /Output directory already exists/,
+    );
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
