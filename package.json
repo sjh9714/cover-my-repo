@@ -1,0 +1,14 @@
+{
+  "name": "cover-my-repo",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "cover-my-repo": "bin/cover-my-repo.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}
