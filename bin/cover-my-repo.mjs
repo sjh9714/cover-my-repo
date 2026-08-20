@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { cpSync, existsSync, mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve, win32 } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve, win32 } from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -96,18 +96,40 @@ function agentCommand(agent, prompt, status = false) {
 }
 
 function agentEnvironment(env) {
-  const clean = { ...env };
-  for (const name of Object.keys(clean)) {
-    if (name === 'OLDPWD' || name === 'PWD' || name === 'SSH_AUTH_SOCK' || /api[_-]?key|token|secret|password|credential/i.test(name)) delete clean[name];
-  }
-  return clean;
+  return Object.fromEntries(
+    ['APPDATA', 'HOME', 'LOCALAPPDATA', 'PATH', 'USERPROFILE', 'XDG_CONFIG_HOME']
+      .filter((name) => env[name])
+      .map((name) => [name, env[name]]),
+  );
 }
 
 function hasAuthenticatedStatus(agent, env) {
   const { command, args } = agentCommand(agent, '', true);
   const result = spawnSync(command, args, { encoding: 'utf8', env: agentEnvironment(env) });
   const status = `${result.stdout || ''}\n${result.stderr || ''}`;
-  return result.status === 0 && /logged in|authenticated/i.test(status) && !/not (logged in|authenticated)|unauthenticated|login required/i.test(status);
+  if (result.status !== 0) return false;
+  if (agent === 'claude') {
+    try {
+      return JSON.parse(status).loggedIn === true;
+    } catch {}
+  }
+  return /logged in|authenticated/i.test(status) && !/not (logged in|authenticated)|unauthenticated|login required/i.test(status);
+}
+
+function staysWithin(parent, child) {
+  const path = relative(parent, child);
+  return path !== '' && path !== '..' && !path.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`) && !isAbsolute(path);
+}
+
+function outputDirectory(cwd, output) {
+  if (output && (isAbsolute(output) || output.split(/[\\/]+/).includes('..'))) throw new Error('Output directory must stay within the target repository');
+  const target = realpathSync(cwd);
+  const requested = resolve(target, output || 'cover-my-repo');
+  if (!staysWithin(target, requested)) throw new Error('Output directory must stay within the target repository');
+  mkdirSync(requested, { recursive: true });
+  const actual = realpathSync(requested);
+  if (!staysWithin(target, actual)) throw new Error('Output directory must stay within the target repository');
+  return actual;
 }
 
 function localRepository(cwd) {
@@ -134,10 +156,9 @@ export async function generateCards({ agent = 'auto', cwd = process.cwd(), env =
     if (result.status !== 0) throw new Error(`${selectedAgent} failed to generate cards`);
     const cards = requiredCards.map((name) => ({ name, html: readFileSync(join(stage, name), 'utf8') }));
     for (const card of cards) validateCardHtml(card.html);
-    const outputDirectory = resolve(cwd, output || 'cover-my-repo');
-    mkdirSync(outputDirectory, { recursive: true });
-    for (const card of cards) writeFileSync(join(outputDirectory, card.name), card.html);
-    return cards.map((card) => join(outputDirectory, card.name));
+    const destination = outputDirectory(cwd, output);
+    for (const card of cards) writeFileSync(join(destination, card.name), card.html);
+    return cards.map((card) => join(destination, card.name));
   } finally {
     rmSync(stage, { recursive: true, force: true });
   }
@@ -234,6 +255,18 @@ export function validatePngDimensions(png, width = 1280, height = 640) {
 export function validateCardHtml(html) {
   if (typeof html !== 'string' || !/^\s*<!doctype html>\s*<html(?:\s[^>]*)?>\s*<head(?:\s[^>]*)?>[\s\S]*<\/head\s*>\s*<body(?:\s[^>]*)?>[\s\S]*<\/body\s*>\s*<\/html\s*>\s*$/i.test(html)) {
     throw new Error('Card HTML must be a complete document');
+  }
+  if (!/\bwidth\s*:\s*1280px\b/i.test(html) || !/\bheight\s*:\s*640px\b/i.test(html)) throw new Error('Card HTML must be 1280 by 640');
+  if (!/<h1(?:\s[^>]*)?>[\s\S]*?<\/h1\s*>/i.test(html)) throw new Error('Card HTML must include an h1 title');
+  if (/\b(?:box-shadow|text-shadow|drop-shadow|backdrop-filter|linear-gradient|radial-gradient|conic-gradient)\b/i.test(html)) throw new Error('Card HTML includes forbidden styles');
+  for (const match of html.matchAll(/(?:href|src)\s*=\s*["']\s*(?:https?:)?\/\/([^/"'\s)]+)/gi)) {
+    if (!['fonts.googleapis.com', 'fonts.gstatic.com'].includes(match[1].toLowerCase())) throw new Error('Card HTML includes an external resource');
+  }
+  for (const match of html.matchAll(/url\(\s*["']?\s*(?:https?:)?\/\/([^/"'\s)]+)/gi)) {
+    if (!['fonts.googleapis.com', 'fonts.gstatic.com'].includes(match[1].toLowerCase())) throw new Error('Card HTML includes an external resource');
+  }
+  for (const match of html.matchAll(/@import\s+(?:url\(\s*)?["']?\s*(?:https?:)?\/\/([^/"'\s)]+)/gi)) {
+    if (!['fonts.googleapis.com', 'fonts.gstatic.com'].includes(match[1].toLowerCase())) throw new Error('Card HTML includes an external resource');
   }
   return true;
 }

@@ -93,3 +93,68 @@ No output
 ## Concern
 
 No live agent account or model was called. The automated coverage uses the required fake executable.
+
+## Fix Round 1
+
+### RED
+
+```sh
+node --test test/cover-my-repo.test.mjs
+```
+
+```text
+# tests 16
+# pass 10
+# fail 6
+```
+
+The failures covered a complete document accepted without card constraints, Claude JSON status rejected, invalid output copied, traversal accepted, and a symlink escape accepted.
+
+```sh
+node --test --test-name-pattern='complete cards' test/cover-my-repo.test.mjs
+```
+
+```text
+not ok 1 - rejects complete cards that fail the generated card checker
+error Missing expected exception
+```
+
+The final checker regression demonstrated that a CSS `@import` could bypass the external-resource restriction.
+
+### GREEN
+
+```sh
+node --test --test-name-pattern='complete cards|Codex text|each staged|invalid|parent-traversal|symlinks' test/cover-my-repo.test.mjs
+```
+
+```text
+# tests 6
+# pass 6
+# fail 0
+```
+
+```sh
+npm test
+```
+
+```text
+# tests 16
+# pass 16
+# fail 0
+```
+
+```sh
+git diff --check
+```
+
+```text
+No output
+```
+
+### Changes
+
+- Claude accepts only JSON status with `loggedIn` set to true. Codex and Cursor retain text status parsing and Cursor zero-exit not-logged-in output is rejected.
+- The HTML boundary requires 1280 by 640 CSS dimensions, an `h1`, no forbidden styles, and only Google Fonts external resources.
+- Agent processes receive only path and local keyring-config variables. Test paths and fake behavior are embedded in the generated fake executables.
+- Output rejects absolute and parent-traversal paths. It resolves the created output directory and rejects symlinks outside the real target directory before copying files.
+- Fake Codex, Claude, and Cursor executables validate their real generation arguments.

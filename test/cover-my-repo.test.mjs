@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { chmodSync, existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -16,24 +16,33 @@ import {
 } from '../bin/cover-my-repo.mjs';
 
 function html(name) {
-  return `<!doctype html><html><head><title>${name}</title></head><body>${name}</body></html>`;
+  return `<!doctype html><html><head><title>${name}</title><style>body { width: 1280px; height: 640px; }</style></head><body><h1>${name}</h1></body></html>`;
 }
 
-function fakeAgent(directory) {
+function fakeAgent(directory, { context, cursorStatus = 'Logged in', invalid = false, target }) {
+  const log = join(directory, 'agent.log');
   const script = `#!/usr/bin/env node
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const args = process.argv.slice(2);
-if (process.env.FAKE_LOG) appendFileSync(process.env.FAKE_LOG, args.join(' ') + '\\n');
+const name = process.argv[1].split('/').pop();
+const statuses = { claude: '{"loggedIn":true}', codex: 'Logged in', 'cursor-agent': ${JSON.stringify(cursorStatus)} };
+const target = ${JSON.stringify(target)};
+const context = ${JSON.stringify(context)};
+appendFileSync(${JSON.stringify(log)}, name + ' ' + args.join(' ') + '\\n');
 if (['login status', 'auth status', 'status'].includes(args.join(' '))) {
-  if (process.env.FAKE_MODE !== 'empty-status') console.log(process.env.FAKE_MODE === 'not-logged-in' ? 'Not logged in' : 'Logged in');
+  console.log(statuses[name]);
   process.exit(0);
 }
-if (args[0] !== 'exec' || process.cwd() === process.env.FAKE_TARGET || process.env.GH_TOKEN || process.env.OPENAI_API_KEY || process.env.PWD === process.env.FAKE_TARGET) process.exit(20);
-const context = readFileSync('repo-context.md', 'utf8');
-if (!existsSync('skill/references/mood-editorial.md') || !existsSync('skill/assets/examples/editorial-red-handed.html') || !existsSync('skill/scripts/check_card.py') || !context.includes(process.env.FAKE_CONTEXT)) process.exit(21);
+const expected = {
+  claude: '-p Read repo-context.md and skill/SKILL.md. Create editorial.html, poster.html, and adaptive.html as complete self-contained card documents in this directory.',
+  codex: 'exec --skip-git-repo-check Read repo-context.md and skill/SKILL.md. Create editorial.html, poster.html, and adaptive.html as complete self-contained card documents in this directory.',
+  'cursor-agent': '--print --force --output-format text Read repo-context.md and skill/SKILL.md. Create editorial.html, poster.html, and adaptive.html as complete self-contained card documents in this directory.',
+};
+if (args.join(' ') !== expected[name] || process.cwd() === target || process.env.GIT_DIR || process.env.GIT_WORK_TREE || process.env.OPENAI_API_KEY || process.env.PWD) process.exit(20);
+if (!existsSync('skill/references/mood-editorial.md') || !existsSync('skill/assets/examples/editorial-red-handed.html') || !existsSync('skill/scripts/check_card.py') || !readFileSync('repo-context.md', 'utf8').includes(context)) process.exit(21);
 for (const name of ['editorial', 'poster', 'adaptive']) {
-  writeFileSync(name + '.html', process.env.FAKE_MODE === 'invalid' && name === 'poster' ? '<html>' : '<!doctype html><html><head><title>' + name + '</title></head><body>' + name + '</body></html>');
+  writeFileSync(name + '.html', ${invalid ? "name === 'poster' ? '<!doctype html><html><head><title>poster</title></head><body><h1>poster</h1></body></html>' : '<!doctype html><html><head><title>' + name + '</title><style>body { width: 1280px; height: 640px; }</style></head><body><h1>' + name + '</h1></body></html>'" : "'<!doctype html><html><head><title>' + name + '</title><style>body { width: 1280px; height: 640px; }</style></head><body><h1>' + name + '</h1></body></html>'"});
 }
 `;
   for (const name of ['claude', 'codex', 'cursor-agent']) {
@@ -41,17 +50,19 @@ for (const name of ['editorial', 'poster', 'adaptive']) {
     writeFileSync(executable, script);
     chmodSync(executable, 0o755);
   }
+  return log;
 }
 
-function temporaryRepository() {
+function temporaryRepository(options = {}) {
   const directory = mkdtempSync(join(tmpdir(), 'cover-my-repo-test-'));
   mkdirSync(join(directory, 'bin'));
-  mkdirSync(join(directory, 'target'));
-  writeFileSync(join(directory, 'target', 'README.md'), '# Target\nREADME facts');
-  writeFileSync(join(directory, 'target', 'package.json'), JSON.stringify({ name: 'target', description: 'local fallback facts' }));
-  for (let index = 0; index < 201; index += 1) writeFileSync(join(directory, 'target', `file-${index}`), '');
-  fakeAgent(join(directory, 'bin'));
-  return directory;
+  const target = join(directory, 'target');
+  mkdirSync(target);
+  writeFileSync(join(target, 'README.md'), '# Target\nREADME facts');
+  writeFileSync(join(target, 'package.json'), JSON.stringify({ name: 'target', description: 'local fallback facts' }));
+  for (let index = 0; index < 201; index += 1) writeFileSync(join(target, `file-${index}`), '');
+  const log = fakeAgent(join(directory, 'bin'), { context: options.context || 'remote metadata facts', cursorStatus: options.cursorStatus, invalid: options.invalid, target });
+  return { directory, log, target };
 }
 
 function pngHeader(width, height) {
@@ -139,16 +150,21 @@ test('validates 1280 by 640 PNG dimensions', () => {
 });
 
 test('rejects malformed card HTML', () => {
-  assert.equal(
-    validateCardHtml('<!doctype html><html><head><title>Card</title></head><body>Card</body></html>'),
-    true,
-  );
+  assert.equal(validateCardHtml(html('Card')), true);
   assert.throws(() => validateCardHtml('<html><body>Card</body>'));
   assert.throws(() => validateCardHtml('<!doctype html><html><body>Card</body><head></head></html>'));
 });
 
 test('rejects card HTML with trailing garbage', () => {
-  assert.throws(() => validateCardHtml('<!doctype html><html><head></head><body>Card</body></html>garbage'));
+  assert.throws(() => validateCardHtml(`${html('Card')}garbage`));
+});
+
+test('rejects complete cards that fail the generated card checker', () => {
+  assert.throws(() => validateCardHtml('<!doctype html><html><head><title>Card</title><style>body { width: 1280px; height: 640px; box-shadow: 1px 1px; }</style></head><body><h1>Card</h1></body></html>'));
+  assert.throws(() => validateCardHtml('<!doctype html><html><head><title>Card</title><style>body { width: 640px; height: 1280px; }</style></head><body><h1>Card</h1></body></html>'));
+  assert.throws(() => validateCardHtml('<!doctype html><html><head><title>Card</title><style>body { width: 1280px; height: 640px; }</style><link href="https://example.com/card.css"></head><body><h1>Card</h1></body></html>'));
+  assert.throws(() => validateCardHtml('<!doctype html><html><head><title>Card</title><style>@import "https://example.com/card.css"; body { width: 1280px; height: 640px; }</style></head><body><h1>Card</h1></body></html>'));
+  assert.throws(() => validateCardHtml('<!doctype html><html><head><title>Card</title><style>body { width: 1280px; height: 640px; }</style></head><body>Card</body></html>'));
 });
 
 test('prints help without a label-style colon', () => {
@@ -159,67 +175,109 @@ test('prints help without a label-style colon', () => {
   ]);
 });
 
-test('generates validated cards through one staged fake agent process', async () => {
-  const directory = temporaryRepository();
-  const target = join(directory, 'target');
-  const log = join(directory, 'agent.log');
-  try {
-    const fetch = async () => ({ ok: true, json: async () => ({ description: 'remote metadata facts', language: 'JavaScript', license: { spdx_id: 'MIT' } }) });
-    const output = await generateCards({
-      agent: 'codex',
-      cwd: target,
-      env: { ...process.env, GH_TOKEN: 'must-not-reach-agent', PATH: `${join(directory, 'bin')}:${process.env.PATH}`, FAKE_CONTEXT: 'remote metadata facts', FAKE_LOG: log, FAKE_TARGET: target, OPENAI_API_KEY: 'must-not-reach-agent', PWD: target },
-      fetch,
-      output: 'cards',
-      repository: { owner: 'octo-org', repo: 'target' },
-    });
-
-    assert.deepEqual(output.map((path) => path.split('/').pop()), ['editorial.html', 'poster.html', 'adaptive.html']);
-    assert.deepEqual(output.map((path) => readFileSync(path, 'utf8')), [html('editorial'), html('poster'), html('adaptive')]);
-    assert.deepEqual(readFileSync(join(target, 'cards', 'editorial.html'), 'utf8'), html('editorial'));
-    assert.deepEqual(readFileSync(log, 'utf8').trim().split('\n'), ['login status', 'exec --skip-git-repo-check Read repo-context.md and skill/SKILL.md. Create editorial.html, poster.html, and adaptive.html as complete self-contained card documents in this directory.']);
-    assert.equal(existsSync(join(target, 'skill')), false);
-  } finally {
-    rmSync(directory, { recursive: true, force: true });
+test('parses Codex text and Claude JSON status while rejecting Cursor text status', async () => {
+  for (const [agent, cursorStatus, accepted] of [
+    ['codex', 'Not logged in', true],
+    ['claude', 'Not logged in', true],
+    ['cursor', 'Not logged in', false],
+  ]) {
+    const { directory, target } = temporaryRepository({ cursorStatus });
+    try {
+      const generation = generateCards({
+        agent,
+        cwd: target,
+        env: { PATH: `${join(directory, 'bin')}:${process.env.PATH}` },
+        fetch: async () => ({ ok: true, json: async () => ({ description: 'remote metadata facts' }) }),
+        output: `${agent}-cards`,
+        repository: { owner: 'octo-org', repo: 'target' },
+      });
+      if (accepted) await generation;
+      else await assert.rejects(generation, /No authenticated agent is available/);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   }
 });
 
-test('treats non-authenticated zero-exit status as unavailable', async () => {
-  const directory = temporaryRepository();
-  try {
-    for (const FAKE_MODE of ['not-logged-in', 'empty-status']) {
-      await assert.rejects(
-        generateCards({
-          agent: 'codex',
-          cwd: join(directory, 'target'),
-          env: { ...process.env, PATH: `${join(directory, 'bin')}:${process.env.PATH}`, FAKE_MODE },
-          output: 'cards',
-          repository: { owner: 'octo-org', repo: 'target' },
-        }),
-        /No authenticated agent is available/,
-      );
+test('generates validated cards through each staged agent adapter', async () => {
+  for (const agent of ['codex', 'claude', 'cursor']) {
+    const { directory, log, target } = temporaryRepository();
+    try {
+      const output = await generateCards({
+        agent,
+        cwd: target,
+        env: { PATH: `${join(directory, 'bin')}:${process.env.PATH}` },
+        fetch: async () => ({ ok: true, json: async () => ({ description: 'remote metadata facts', language: 'JavaScript', license: { spdx_id: 'MIT' } }) }),
+        output: `${agent}-cards`,
+        repository: { owner: 'octo-org', repo: 'target' },
+      });
+
+      assert.deepEqual(output.map((path) => path.split('/').pop()), ['editorial.html', 'poster.html', 'adaptive.html']);
+      assert.deepEqual(output.map((path) => readFileSync(path, 'utf8')), [html('editorial'), html('poster'), html('adaptive')]);
+      assert.deepEqual(readFileSync(log, 'utf8').trim().split('\n').length, 2);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
     }
-  } finally {
-    rmSync(directory, { recursive: true, force: true });
   }
 });
 
 test('does not copy any cards when one staged card is invalid', async () => {
-  const directory = temporaryRepository();
-  const target = join(directory, 'target');
+  const { directory, target } = temporaryRepository({ context: 'local fallback facts', invalid: true });
+  try {
+    await assert.rejects(
+      generateCards({
+      agent: 'codex',
+      cwd: target,
+      env: { PATH: `${join(directory, 'bin')}:${process.env.PATH}` },
+      fetch: async () => { throw new Error('offline'); },
+      output: 'cards',
+      repository: { owner: 'octo-org', repo: 'target' },
+      }),
+      /1280 by 640/,
+    );
+    assert.equal(existsSync(join(target, 'cards')), false);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('rejects parent-traversal output paths', async () => {
+  const { directory, target } = temporaryRepository();
   try {
     await assert.rejects(
       generateCards({
         agent: 'codex',
         cwd: target,
-        env: { ...process.env, PATH: `${join(directory, 'bin')}:${process.env.PATH}`, FAKE_MODE: 'invalid', FAKE_TARGET: target, FAKE_CONTEXT: 'local fallback facts' },
-        fetch: async () => { throw new Error('offline'); },
+        env: { PATH: `${join(directory, 'bin')}:${process.env.PATH}` },
+        fetch: async () => ({ ok: true, json: async () => ({ description: 'remote metadata facts' }) }),
+        output: '../outside',
+        repository: { owner: 'octo-org', repo: 'target' },
+      }),
+      /Output directory must stay within the target repository/,
+    );
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('rejects output symlinks that escape the target repository', async () => {
+  const { directory, target } = temporaryRepository();
+  const outside = join(directory, 'outside');
+  mkdirSync(outside);
+  symlinkSync(outside, join(target, 'cards'));
+  try {
+    await assert.rejects(
+      generateCards({
+        agent: 'codex',
+        cwd: target,
+        env: { PATH: `${join(directory, 'bin')}:${process.env.PATH}` },
+        fetch: async () => ({ ok: true, json: async () => ({ description: 'remote metadata facts' }) }),
         output: 'cards',
         repository: { owner: 'octo-org', repo: 'target' },
       }),
-      /Card HTML must be a complete document/,
+      /Output directory must stay within the target repository/,
     );
-    assert.equal(existsSync(join(target, 'cards')), false);
+    assert.equal(existsSync(join(outside, 'editorial.html')), false);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
