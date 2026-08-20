@@ -17,11 +17,13 @@ import {
   validatePngDimensions,
 } from '../bin/cover-my-repo.mjs';
 
+const decisionCompletePrompt = 'This batch is pre-approved. Do not ask questions or request confirmation. Read repo-context.md and skill/SKILL.md. Using only facts from repo-context.md, create exactly editorial.html, poster.html, and adaptive.html as complete self-contained card documents in this directory. Use the editorial mood for editorial.html and the poster mood for poster.html. For adaptive.html, choose terminal for CLI or developer tools, otherwise blueprint for infrastructure, otherwise gallery. Read the matching mood reference and example for each selected mood. Run skill/scripts/check_card.py on all three files. Finish only after all three files exist and pass the checker.';
+
 function html(name) {
   return `<!doctype html><html><head><title>${name}</title><style>body { width: 1280px; height: 640px; }</style></head><body><h1>${name}</h1></body></html>`;
 }
 
-function fakeAgent(directory, { context, cursorStatus = 'Logged in', invalid = false, target }) {
+function fakeAgent(directory, { context, createsCards = true, cursorStatus = 'Logged in', invalid = false, target }) {
   const log = join(directory, 'agent.log');
   const script = `#!/usr/bin/env node
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -31,18 +33,20 @@ const name = process.argv[1].split('/').pop();
 const statuses = { claude: '{"loggedIn":true}', codex: 'Logged in', 'cursor-agent': ${JSON.stringify(cursorStatus)} };
 const target = ${JSON.stringify(target)};
 const context = ${JSON.stringify(context)};
+const prompt = ${JSON.stringify(decisionCompletePrompt)};
 appendFileSync(${JSON.stringify(log)}, name + ' ' + args.join(' ') + '\\n');
 if (['login status', 'auth status', 'status'].includes(args.join(' '))) {
   console.log(statuses[name]);
   process.exit(0);
 }
 const expected = {
-  claude: '-p Read repo-context.md and skill/SKILL.md. Create editorial.html, poster.html, and adaptive.html as complete self-contained card documents in this directory.',
-  codex: 'exec --skip-git-repo-check Read repo-context.md and skill/SKILL.md. Create editorial.html, poster.html, and adaptive.html as complete self-contained card documents in this directory.',
-  'cursor-agent': '--print --force --output-format text Read repo-context.md and skill/SKILL.md. Create editorial.html, poster.html, and adaptive.html as complete self-contained card documents in this directory.',
+  claude: '-p ' + prompt,
+  codex: 'exec --skip-git-repo-check ' + prompt,
+  'cursor-agent': '--print --force --output-format text ' + prompt,
 };
 if (args.join(' ') !== expected[name] || process.cwd() === target || process.env.GIT_DIR || process.env.GIT_WORK_TREE || process.env.OPENAI_API_KEY || process.env.PWD) process.exit(20);
 if (!existsSync('skill/references/mood-editorial.md') || !existsSync('skill/assets/examples/editorial-red-handed.html') || !existsSync('skill/scripts/check_card.py') || !readFileSync('repo-context.md', 'utf8').includes(context)) process.exit(21);
+if (!${createsCards}) process.exit(0);
 for (const name of ['editorial', 'poster', 'adaptive']) {
   writeFileSync(name + '.html', ${invalid ? "name === 'poster' ? '<!doctype html><html><head><title>poster</title></head><body><h1>poster</h1></body></html>' : '<!doctype html><html><head><title>' + name + '</title><style>body { width: 1280px; height: 640px; }</style></head><body><h1>' + name + '</h1></body></html>'" : "'<!doctype html><html><head><title>' + name + '</title><style>body { width: 1280px; height: 640px; }</style></head><body><h1>' + name + '</h1></body></html>'"});
 }
@@ -63,7 +67,7 @@ function temporaryRepository(options = {}) {
   writeFileSync(join(target, 'README.md'), '# Target\nREADME facts');
   writeFileSync(join(target, 'package.json'), JSON.stringify({ name: 'target', description: 'local fallback facts' }));
   for (let index = 0; index < 201; index += 1) writeFileSync(join(target, `file-${index}`), '');
-  const log = fakeAgent(join(directory, 'bin'), { context: options.context || 'remote metadata facts', cursorStatus: options.cursorStatus, invalid: options.invalid, target });
+  const log = fakeAgent(join(directory, 'bin'), { context: options.context || 'remote metadata facts', createsCards: options.createsCards, cursorStatus: options.cursorStatus, invalid: options.invalid, target });
   return { chrome: fakeChrome(join(directory, 'bin')).executable, directory, log, target };
 }
 
@@ -272,6 +276,27 @@ test('does not call an agent when Chrome is unavailable', async () => {
       /Chrome is required/,
     );
     assert.equal(existsSync(log), false);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('rejects a zero-exit agent that creates no required card files', async () => {
+  const { chrome, directory, target } = temporaryRepository({ createsCards: false });
+  try {
+    await assert.rejects(
+      generateCards({
+        agent: 'codex',
+        chrome,
+        cwd: target,
+        env: { PATH: `${join(directory, 'bin')}:${process.env.PATH}` },
+        fetch: async () => ({ ok: true, json: async () => ({ description: 'remote metadata facts' }) }),
+        output: 'cards',
+        repository: { owner: 'octo-org', repo: 'target' },
+      }),
+      /codex completed without creating the required card files/,
+    );
+    assert.equal(existsSync(join(target, 'cards')), false);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

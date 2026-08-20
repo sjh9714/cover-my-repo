@@ -188,10 +188,11 @@ export async function generateCards({ agent = 'auto', cwd = process.cwd(), env =
   try {
     cpSync(skillDirectory, join(stage, 'skill'), { recursive: true });
     writeFileSync(join(stage, 'repo-context.md'), await collectRepositoryContext({ cwd, fetch, repository }));
-    const prompt = 'Read repo-context.md and skill/SKILL.md. Create editorial.html, poster.html, and adaptive.html as complete self-contained card documents in this directory.';
+    const prompt = 'This batch is pre-approved. Do not ask questions or request confirmation. Read repo-context.md and skill/SKILL.md. Using only facts from repo-context.md, create exactly editorial.html, poster.html, and adaptive.html as complete self-contained card documents in this directory. Use the editorial mood for editorial.html and the poster mood for poster.html. For adaptive.html, choose terminal for CLI or developer tools, otherwise blueprint for infrastructure, otherwise gallery. Read the matching mood reference and example for each selected mood. Run skill/scripts/check_card.py on all three files. Finish only after all three files exist and pass the checker.';
     const { command, args } = agentCommand(selectedAgent, prompt);
     const result = spawnSync(command, args, { cwd: stage, encoding: 'utf8', env: agentEnvironment(env) });
     if (result.status !== 0) throw new Error(`${selectedAgent} failed to generate cards`);
+    if (!requiredCards.every((name) => existsSync(join(stage, name)))) throw new Error(`${selectedAgent} completed without creating the required card files`);
     const cards = requiredCards.map((name) => ({ name, html: readFileSync(join(stage, name), 'utf8') }));
     for (const card of cards) validateCardHtml(card.html);
     renderCards({ chrome, htmlPaths: cards.map((card) => join(stage, card.name)), output: stage, repository });
