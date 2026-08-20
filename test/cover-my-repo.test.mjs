@@ -135,6 +135,15 @@ if (!${missing} && screenshot) {
   return { executable, log };
 }
 
+function realChromeForTest(directory) {
+  const chrome = findChrome();
+  if (!process.env.CI || !chrome) return chrome;
+  const wrapper = join(directory, 'chrome-ci-wrapper');
+  writeFileSync(wrapper, `#!/bin/sh\nexec ${JSON.stringify(chrome)} --no-sandbox "$@"\n`);
+  chmodSync(wrapper, 0o755);
+  return wrapper;
+}
+
 test('parses GitHub HTTPS remotes', () => {
   assert.deepEqual(
     parseRepository('https://github.com/octo-org/hello-world.git'),
@@ -372,7 +381,7 @@ test('renders cards end to end with a fake agent and real Chrome without opening
       (message) => messages.push(message),
       target,
       {
-        chrome: findChrome(),
+        chrome: realChromeForTest(directory),
         env: { PATH: `${join(directory, 'bin')}:${process.env.PATH}` },
         fetch: async () => ({ ok: true, json: async () => ({ description: 'remote metadata facts' }) }),
         open: (...args) => opened.push(args),
