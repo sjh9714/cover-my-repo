@@ -1,97 +1,112 @@
-# repo-cover
+# Cover My Repo
 
-**リポジトリのソーシャルプレビューを、雑誌の表紙のように。コーディング
-エージェントが自己完結の HTML 1 ファイルとして書き上げます。**
-
-X や Slack、Discord にリポジトリのリンクを貼るたびにカードが表示され
-ます。今のそのカードは、GitHub の自動生成か、誰のものとも見分けの
-つかないジェネレーターのテンプレートのはずです。このスキルはエージェ
-ント自身にカードを設計させます。本物のタイポグラフィ階層、言語カラー
-から取ったアクセント 1 色、そしてモデルの暴走を止める決定的チェック。
+**クリックしたくなる GitHub ソーシャルプレビューを作ります。**
 
 [English](README.md) | [한국어](README.ko.md) | [简体中文](README.zh-CN.md)
 
-![ムードのデモ](docs/demo.gif)
+![Cover My Repo CLI デモ](docs/cli-demo.gif)
 
-![ムードグリッド](docs/hero.png)
-
-![Before and after](docs/compare.png)
-
-## インストール
+## すぐに実行
 
 ```sh
-# Agent Skills CLI (Claude Code, Codex, Cursor, opencode, ...)
-npx skills add sjh9714/repo-cover
-
-# Claude Code プラグインマーケットプレイス
-/plugin marketplace add sjh9714/repo-cover
-/plugin install repo-cover@repo-cover
+npx cover-my-repo
 ```
 
-インストール後、リポジトリで一言。
+Git リポジトリ内で実行します。認証済みの Codex、Claude、Cursor CLI を
+検出し、3 つのデザインを作り、ローカルの Chrome で描画して比較画面を
+開きます。
 
-> このリポジトリのソーシャルプレビューカードを作って。
+画像モデルは使わず、リポジトリの認証情報も渡しません。
 
-エージェントがリポジトリ情報を集め、説明文を 1 行に磨き、
-`<repo>-cover.html` を書き、チェックを通し、1280x640 の PNG を書き出し
-ます。**Settings → Social preview** にアップロードすれば完了です。
+Node.js 20 と Chrome が必要です。GitHub の
+**Settings → Social preview** へのアップロードは手動なので、確認なしで
+リポジトリ設定が変わることはありません。
+
+![5 つのムード](docs/hero.png)
+
+![GitHub の標準画像と Cover My Repo の比較](docs/compare.png)
+
+## 作られるもの
+
+- 自己完結した HTML デザイン 3 つ
+- ローカル Chrome で描画した 1280x640 PNG 3 枚
+- 原寸とフィード幅を並べる比較ページ
+- コントラスト、はみ出し、CJK 改行、キャンバス寸法の決定的チェック
+
+最後の GitHub アップロードは CLI が代行しません。
 
 ## 5 つのムード
 
+すべての例は [ギャラリー](https://sjh9714.github.io/cover-my-repo/) で
+ライブページとして確認できます。
+
 | | |
 |---|---|
-| **editorial** (デフォルト)。温かい紙色、Fraunces のワードマーク、角から広がる同心円 | ![editorial](skills/repo-cover/assets/examples/editorial-red-handed.png) |
-| **poster**。言語カラーから混ぜたディープカラーの面、リポジトリの頭文字をクロップした透かし | ![poster](skills/repo-cover/assets/examples/poster-openlogi.png) |
-| **blueprint**。ネイビーの方眼、等幅書体、コーナーティック、リポジトリ名から導いた図面番号 | ![blueprint](skills/repo-cover/assets/examples/blueprint-macos-harness.png) |
-| **gallery**。美術館の作品ラベル。純白、中央揃え、細身のセリフ | ![gallery](skills/repo-cover/assets/examples/gallery-cumora.png) |
-| **terminal**。リポジトリをターミナルセッションに。ウィンドウクローム、ブロックカーソル、EXIT 0 | ![terminal](skills/repo-cover/assets/examples/terminal-freeze.png) |
+| **editorial**。温かい紙色、Fraunces のワードマーク、控えめな同心円 | ![editorial](skills/repo-cover/assets/examples/editorial-red-handed.png) |
+| **poster**。言語カラーを混ぜた深い背景と大きく切り取った頭文字 | ![poster](skills/repo-cover/assets/examples/poster-openlogi.png) |
+| **blueprint**。ネイビーの方眼、等幅書体、コーナーティック、図面番号 | ![blueprint](skills/repo-cover/assets/examples/blueprint-macos-harness.png) |
+| **gallery**。中央揃えの細いセリフで組む美術館の作品ラベル | ![gallery](skills/repo-cover/assets/examples/gallery-cumora.png) |
+| **terminal**。ウィンドウクロームと EXIT 0 を備えた端末セッション | ![terminal](skills/repo-cover/assets/examples/terminal-freeze.png) |
 
-同じカードは二枚と生まれません。アクセントは主要言語から、同心円と
-図面番号はリポジトリ名のハッシュから、poster の透かしはあなたの
-リポジトリ自身の文字から来ます。
+アクセントは主要言語から選ばれます。細部はリポジトリ名から決まるため、
+同じ設計体系を保ちながら複製のようには見えません。
 
-## 強制されるルール
+## エージェントスキルとして使う
 
-モデルの裁量ではなく、数字で縛ってあります。
+従来の `repo-cover` スキルも引き続き使えます。互換性のため内部名は
+変更しません。
 
-- すべての座標とサイズは 4px グリッド
-- カード 1 枚にアクセント 1 色、WCAG コントラストを満たすまで自動で暗く
-- 名前の長さによるタイトルサイズ段階 (132px から 64px、26 字超は 2 行)
-- 説明文は 110 字予算 (CJK は 60 字)、最大 2 行
-- 影、グラデーション、グラスモーフィズム、絵文字は禁止
-- スター数は**デフォルトで非表示**。すぐ古びる上に、若いリポジトリに酷なので
+```sh
+# Agent Skills CLI
+npx skills add sjh9714/cover-my-repo
 
-`scripts/check_card.py` がすべてを決定的に検査します。キャンバス寸法、
-自己完結性、コントラスト、CJK の改行、X の 506px 幅への縮小可読性まで。
+# Claude Code プラグインマーケットプレイス
+/plugin marketplace add sjh9714/cover-my-repo
+/plugin install repo-cover@repo-cover
 
-## CJK は一級市民です
+# Codex
+codex plugin marketplace add sjh9714/cover-my-repo
+codex plugin add repo-cover@repo-cover
+```
 
-![Korean example](skills/repo-cover/assets/examples/editorial-korean.png)
+インストール後、エージェントにリポジトリのソーシャルプレビューを作る
+よう頼みます。
 
-日本語は Noto Sans JP と正しい禁則処理で組まれます。豆腐フォールバック
-ではありません。韓国語は keep-all、中国語は Noto Sans SC。CJK には
-専用の文字数予算があり、チェッカーが改行の破綻を検出します。
-`references/cjk.md` を参照してください。
+## チェックされるルール
 
-## 鮮度を保つ
+- 座標とサイズはすべて 4px グリッド
+- カード 1 枚にアクセント 1 色と WCAG コントラスト
+- 名前の長さに応じた 132px から 64px のタイトル
+- 説明文は 110 文字、CJK は 60 文字まで
+- 影、グラデーション、ガラス効果、絵文字は禁止
+- すぐ古くなるスター数は初期状態で非表示
 
-カードは意図的に静的ファイルです。同梱のコンポジット Action が CI で
-再レンダリングし、フォールバックフォントのまま出荷される事故を防ぎ
-ます。説明文がよく変わるならスケジュール実行もできます。
+`skills/repo-cover/scripts/check_card.py` がキャンバス寸法、自己完結性、
+コントラスト、CJK 改行、縮小時の可読性を検査します。
+
+## CJK 対応
+
+![日本語の例](skills/repo-cover/assets/examples/editorial-japanese.png)
+
+日本語は Noto Sans JP と適切な禁則処理を使います。韓国語は Noto Sans KR、
+中国語は Noto Sans SC と、それぞれの改行規則を使います。
+
+## カードを再描画する
+
+同梱の Action で既存の HTML カードを CI 上でもう一度描画できます。
 
 ```yaml
-- uses: sjh9714/repo-cover@main
+- uses: sjh9714/cover-my-repo@main
   with:
     card: assets/my-repo-cover.html
     output: cover.png
 ```
 
-## 使わない方がよいとき
+## 使わない方がよい場合
 
-- 図やチャートが欲しいなら、ダイアグラム系スキルをどうぞ。
-- ロゴやマスコットが欲しいなら、画像生成系スキルをどうぞ。
-- 非公開リポジトリでリンクされる予定がないなら、デフォルトのカードで
-  十分です。
+- チャートや構成図にはダイアグラムツールが適しています。
+- ロゴやマスコットには画像生成ツールが適しています。
+- 外部共有しない非公開リポジトリなら GitHub の標準カードで十分です。
 
 ## ライセンス
 

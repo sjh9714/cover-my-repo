@@ -1,5 +1,5 @@
-name: Showcase a card
-description: Made a cover with repo-cover? Show it off. Good ones get featured in the gallery.
+name: Showcase a Cover My Repo card
+description: Made a cover with Cover My Repo? Show it off. Good ones get featured in the gallery.
 title: "[showcase] "
 labels: [showcase]
 body:
@@ -19,6 +19,7 @@ body:
         - poster
         - blueprint
         - gallery
+        - terminal
         - custom
     validations:
       required: true

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { chmodSync, existsSync, mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdtempSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -20,7 +20,7 @@ import {
 const decisionCompletePrompt = 'This batch is pre-approved. Do not ask questions or request confirmation. Read repo-context.md and skill/SKILL.md. Using only facts from repo-context.md, create exactly editorial.html, poster.html, and adaptive.html as complete self-contained card documents in this directory. Use the editorial mood for editorial.html and the poster mood for poster.html. For adaptive.html, choose terminal for CLI or developer tools, otherwise blueprint for infrastructure, otherwise gallery. Read the matching mood reference and example for each selected mood. Run skill/scripts/check_card.py on all three files. Finish only after all three files exist and pass the checker.';
 
 function html(name) {
-  return `<!doctype html><html><head><title>${name}</title><style>body { width: 1280px; height: 640px; }</style></head><body><h1>${name}</h1></body></html>`;
+  return `<!doctype html><html><head><title>${name}</title><style>body { width: 1280px; height: 640px; } .title { font-size: 132px; }</style></head><body><h1 class="title">${name}</h1></body></html>`;
 }
 
 function fakeAgent(directory, { context, createsCards = true, cursorStatus = 'Logged in', invalid = false, target }) {
@@ -48,7 +48,7 @@ if (args.join(' ') !== expected[name] || process.cwd() === target || process.env
 if (!existsSync('skill/references/mood-editorial.md') || !existsSync('skill/assets/examples/editorial-red-handed.html') || !existsSync('skill/scripts/check_card.py') || !readFileSync('repo-context.md', 'utf8').includes(context)) process.exit(21);
 if (!${createsCards}) process.exit(0);
 for (const name of ['editorial', 'poster', 'adaptive']) {
-  writeFileSync(name + '.html', ${invalid ? "name === 'poster' ? '<!doctype html><html><head><title>poster</title></head><body><h1>poster</h1></body></html>' : '<!doctype html><html><head><title>' + name + '</title><style>body { width: 1280px; height: 640px; }</style></head><body><h1>' + name + '</h1></body></html>'" : "'<!doctype html><html><head><title>' + name + '</title><style>body { width: 1280px; height: 640px; }</style></head><body><h1>' + name + '</h1></body></html>'"});
+  writeFileSync(name + '.html', ${invalid ? "name === 'poster' ? '<!doctype html><html><head><title>poster</title><style>.title { font-size: 132px; }</style></head><body><h1 class=\"title\">poster</h1></body></html>' : '<!doctype html><html><head><title>' + name + '</title><style>body { width: 1280px; height: 640px; } .title { font-size: 132px; }</style></head><body><h1 class=\"title\">' + name + '</h1></body></html>'" : "'<!doctype html><html><head><title>' + name + '</title><style>body { width: 1280px; height: 640px; } .title { font-size: 132px; }</style></head><body><h1 class=\"title\">' + name + '</h1></body></html>'"});
 }
 `;
   for (const name of ['claude', 'codex', 'cursor-agent']) {
@@ -142,6 +142,7 @@ test('parses public options', () => {
     },
   );
   assert.throws(() => parseOptions(['--agent', 'unknown']));
+  assert.throws(() => parseOptions(['--unknown']), { message: 'Unknown argument --unknown' });
   assert.equal(parseOptions([]).output, 'cover-my-repo-output');
 });
 
@@ -328,10 +329,11 @@ test('leaves no final or temporary output directory after a failed render', asyn
 test('renders cards end to end with a fake agent and real Chrome without opening', async () => {
   const { directory, log, target } = temporaryRepository();
   const opened = [];
+  const messages = [];
   try {
     const cards = await main(
       ['octo-org/target', '--agent', 'codex', '--no-open'],
-      () => {},
+      (message) => messages.push(message),
       target,
       {
         chrome: findChrome(),
@@ -349,6 +351,10 @@ test('renders cards end to end with a fake agent and real Chrome without opening
     }
     assert.match(readFileSync(join(output, 'index.html'), 'utf8'), /GitHub social preview settings/);
     assert.equal(opened.length, 0);
+    assert.deepEqual(messages, [
+      'Creating three cover options. This can take a few minutes.',
+      `Created three cover options in ${realpathSync(output)}`,
+    ]);
     assert.equal(readFileSync(log, 'utf8').trim().split('\n').length, 2);
   } finally {
     rmSync(directory, { recursive: true, force: true });
@@ -372,6 +378,23 @@ test('rejects complete cards that fail the generated card checker', () => {
   assert.throws(() => validateCardHtml('<!doctype html><html><head><title>Card</title><style>body { width: 1280px; height: 640px; }</style></head><body><h1>Card</h1><img src=https://evil.example/card.png></body></html>'));
   assert.throws(() => validateCardHtml('<!doctype html><html><head><title>Card</title><style>@import "https://example.com/card.css"; body { width: 1280px; height: 640px; }</style></head><body><h1>Card</h1></body></html>'));
   assert.throws(() => validateCardHtml('<!doctype html><html><head><title>Card</title><style>body { width: 1280px; height: 640px; }</style></head><body>Card</body></html>'));
+});
+
+test('mirrors the deterministic card checker without requiring Python', () => {
+  const examples = join(import.meta.dirname, '..', 'skills', 'repo-cover', 'assets', 'examples');
+  const editorial = readFileSync(join(examples, 'editorial-repo-cover.html'), 'utf8');
+  const blueprint = readFileSync(join(examples, 'blueprint-macos-harness.html'), 'utf8');
+  const korean = readFileSync(join(examples, 'editorial-korean.html'), 'utf8');
+
+  assert.equal(validateCardHtml(editorial), true);
+  assert.equal(validateCardHtml(blueprint), true);
+  assert.throws(() => validateCardHtml(editorial.replace('font-size:108px', 'font-size:132px')), /title size/);
+  assert.throws(() => validateCardHtml(editorial.replace('</p>', `${'x'.repeat(111)}</p>`)), /description budget/);
+  assert.throws(() => validateCardHtml(editorial.replace('color:#B3382C', 'color:#FAF9F5')), /accent contrast/);
+  assert.throws(() => validateCardHtml(editorial.replace('</p>', ' 🐙</p>')), /emoji/);
+  assert.throws(() => validateCardHtml(korean.replaceAll('Noto', 'Arial')), /Noto font/);
+  assert.throws(() => validateCardHtml(korean.replace('word-break:keep-all', 'word-break:normal')), /keep-all/);
+  assert.throws(() => validateCardHtml(blueprint.replace('background-size:32px 32px', 'background-size:31px 31px')), /gradient/);
 });
 
 test('prints help without a label-style colon', () => {

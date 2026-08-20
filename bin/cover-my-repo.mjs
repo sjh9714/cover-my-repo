@@ -245,7 +245,7 @@ export function parseOptions(args) {
     } else if (argument === '--version') {
       options.version = true;
     } else if (argument.startsWith('--') || options.repository) {
-      throw new Error(`Unknown argument: ${argument}`);
+      throw new Error(`Unknown argument ${argument}`);
     } else {
       options.repository = parseRepository(argument);
     }
@@ -346,7 +346,11 @@ export function validateCardHtml(html) {
   }
   if (!/\bwidth\s*:\s*1280px\b/i.test(html) || !/\bheight\s*:\s*640px\b/i.test(html)) throw new Error('Card HTML must be 1280 by 640');
   if (!/<h1(?:\s[^>]*)?>[\s\S]*?<\/h1\s*>/i.test(html)) throw new Error('Card HTML must include an h1 title');
-  if (/\b(?:box-shadow|text-shadow|drop-shadow|backdrop-filter|linear-gradient|radial-gradient|conic-gradient)\b/i.test(html)) throw new Error('Card HTML includes forbidden styles');
+  if (/\b(?:box-shadow|text-shadow|drop-shadow|backdrop-filter|radial-gradient|conic-gradient)\b/i.test(html)) throw new Error('Card HTML includes forbidden styles');
+  if (/[\u{1F300}-\u{1FAFF}]/u.test(html)) throw new Error('Card HTML includes forbidden emoji');
+  if (/linear-gradient/i.test(html) && !html.replace(/\s/g, '').includes('background-size:32px32px')) {
+    throw new Error('Card HTML includes a gradient outside the blueprint grid');
+  }
   for (const match of html.matchAll(/(?:href|src)\s*=\s*(?:["']\s*)?(?:https?:)?\/\/([^/"'\s>]+)/gi)) {
     if (!['fonts.googleapis.com', 'fonts.gstatic.com'].includes(match[1].toLowerCase())) throw new Error('Card HTML includes an external resource');
   }
@@ -355,6 +359,37 @@ export function validateCardHtml(html) {
   }
   for (const match of html.matchAll(/@import\s+(?:url\(\s*)?["']?\s*(?:https?:)?\/\/([^/"'\s)]+)/gi)) {
     if (!['fonts.googleapis.com', 'fonts.gstatic.com'].includes(match[1].toLowerCase())) throw new Error('Card HTML includes an external resource');
+  }
+
+  const stripTags = (value) => value.replace(/<[^>]+>/g, '').trim();
+  const titleMatch = html.match(/<h1[^>]*class=["'][^"']*\btitle\b[^"']*["'][^>]*>([\s\S]*?)<\/h1>/i);
+  const title = titleMatch ? stripTags(titleMatch[1]).replace(/[._]+$/, '') : '';
+  const titleSize = html.match(/\.title\s*\{[^}]*?font-size\s*:\s*(\d+)px/i);
+  if (!title || !titleSize) throw new Error('Card HTML must include a sized title class');
+  const titleTier = [[9, 132], [14, 108], [20, 92], [26, 74], [Infinity, 64]].find(([length]) => title.length <= length)[1];
+  if (Number(titleSize[1]) > titleTier) throw new Error('Card HTML title size exceeds its length tier');
+
+  const descriptionMatch = html.match(/<p[^>]*class=["'][^"']*\bdesc\b[^"']*["'][^>]*>([\s\S]*?)<\/p>/i);
+  if (descriptionMatch) {
+    const description = stripTags(descriptionMatch[1]);
+    const cjk = /[\p{Script=Han}\p{Script=Hangul}]/u.test(description);
+    if (description.length > (cjk ? 60 : 110)) throw new Error('Card HTML description budget is exceeded');
+    if (cjk && !/Noto/i.test(html)) throw new Error('Card HTML has CJK text without a Noto font');
+    if (/\p{Script=Hangul}/u.test(description) && !/word-break\s*:\s*keep-all/i.test(html)) {
+      throw new Error('Card HTML has Korean text without keep-all');
+    }
+  }
+
+  const background = html.match(/\.card\s*\{[^}]*?background\s*:\s*(#[0-9a-f]{6})/i)?.[1];
+  const accent = html.match(/\.(?:stop|rule)\s*\{[^}]*?(?:color|background)\s*:\s*(#[0-9a-f]{6})/i)?.[1];
+  if (background && accent) {
+    const luminance = (hex) => {
+      const channels = [1, 3, 5].map((offset) => Number.parseInt(hex.slice(offset, offset + 2), 16) / 255)
+        .map((channel) => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);
+      return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+    };
+    const [lighter, darker] = [luminance(background), luminance(accent)].sort((a, b) => b - a);
+    if ((lighter + 0.05) / (darker + 0.05) < 3) throw new Error('Card HTML accent contrast is below 3 to 1');
   }
   return true;
 }
@@ -366,7 +401,9 @@ export async function main(args = process.argv.slice(2), write = console.log, cw
   if (options.help || options.version) return options;
   const { chrome, env = process.env, fetch = globalThis.fetch, open = openOutputs } = dependencies;
   const repository = options.repository || localRepository(cwd);
+  write('Creating three cover options. This can take a few minutes.');
   const cards = await generateCards({ ...options, chrome, cwd, env, fetch, repository });
+  write(`Created three cover options in ${dirname(cards[0])}`);
   if (options.open) open({ output: dirname(cards[0]), repository });
   return cards;
 }

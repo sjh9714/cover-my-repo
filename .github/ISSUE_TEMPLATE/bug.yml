@@ -1,5 +1,5 @@
 name: Bug report
-description: The skill produced a bad card, the checker missed something, or a doc is wrong.
+description: Cover My Repo produced a bad card, the checker missed something, or a doc is wrong.
 labels: [bug]
 body:
   - type: input

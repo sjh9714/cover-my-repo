@@ -1,6 +1,29 @@
 {
   "name": "cover-my-repo",
   "version": "0.1.0",
+  "description": "Generate three distinct GitHub social preview cards with Codex, Claude, or Cursor.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sjh9714/cover-my-repo.git"
+  },
+  "homepage": "https://github.com/sjh9714/cover-my-repo#readme",
+  "keywords": [
+    "github",
+    "social-preview",
+    "og-image",
+    "open-graph",
+    "codex",
+    "claude-code",
+    "cursor",
+    "agent-skill"
+  ],
+  "files": [
+    "bin",
+    "LICENSE",
+    "README.md",
+    "skills/repo-cover"
+  ],
   "type": "module",
   "bin": {
     "cover-my-repo": "bin/cover-my-repo.mjs"
@@ -9,6 +32,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "prepublishOnly": "npm test"
   }
 }

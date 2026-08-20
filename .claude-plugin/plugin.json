@@ -1,13 +1,14 @@
 {
   "name": "repo-cover",
-  "description": "Design GitHub social-preview cards (og:image, 1280x640) as one self-contained HTML file. Five moods (editorial, poster, blueprint, gallery, terminal), CJK-first typography, deterministic design checks, crisp PNG export, and a bundled GitHub Action that keeps the card fresh. Use for a repo cover, social preview, opengraph image, link card, or README hero.",
-  "version": "1.0.0",
+  "displayName": "Cover My Repo",
+  "description": "Create three GitHub social preview options, render them with local Chrome, and compare them before manual upload. Five moods, CJK-first typography, deterministic checks, and crisp PNG export.",
+  "version": "2.0.0",
   "author": {
     "name": "sjh9714",
     "url": "https://github.com/sjh9714"
   },
-  "homepage": "https://github.com/sjh9714/repo-cover",
-  "repository": "https://github.com/sjh9714/repo-cover",
+  "homepage": "https://github.com/sjh9714/cover-my-repo",
+  "repository": "https://github.com/sjh9714/cover-my-repo",
   "license": "MIT",
   "keywords": [
     "social-preview",

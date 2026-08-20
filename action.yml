@@ -1,7 +1,5 @@
-name: repo-cover-render
-description: >-
-  Render a repo-cover card HTML to a 1280x640 PNG in CI with headless
-  Chrome, so the social preview stays crisp and fresh.
+name: Cover My Repo Render
+description: Render Cover My Repo HTML to a crisp 1280x640 PNG with headless Chrome.
 branding:
   icon: image
   color: red

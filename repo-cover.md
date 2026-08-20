@@ -5,8 +5,8 @@ description: >
   Use when the user asks for a social preview, repo cover, og image, link
   card, opengraph image, or README hero. This flat file is the
   self-contained editorial-mood version for harnesses that discover a
-  single skill file; the full four-mood skill lives in skills/repo-cover/
-  at https://github.com/sjh9714/repo-cover
+  single skill file; the full five-mood skill lives in skills/repo-cover/
+  at https://github.com/sjh9714/cover-my-repo
 license: MIT
 ---
 
@@ -95,6 +95,6 @@ body{width:1280px;height:640px;overflow:hidden}
 - Description within its character budget, no mid-word hyphen breaks.
 - Korean present implies keep-all present.
 
-For the poster, blueprint, and gallery moods, the deterministic checker
+For the poster, blueprint, gallery, and terminal moods, the deterministic checker
 script, shipped examples, and a live gallery, see
-https://github.com/sjh9714/repo-cover
+https://github.com/sjh9714/cover-my-repo

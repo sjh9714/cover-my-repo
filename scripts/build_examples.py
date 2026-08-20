@@ -311,9 +311,9 @@ CARDS = [
         desc="변경하기 쉬운 프론트엔드 코드를 위한 지침서. 기준이 되는 좋은 코드의 원칙을 다룹니다.",
         accent="#2E71D2", metas=["Documentation", "MIT"], cjk=True)),
     ("editorial-repo-cover", editorial, dict(
-        owner="sjh9714", name="repo-cover",
-        desc="Your repo&rsquo;s social preview, designed like a magazine masthead. Four moods, CJK-first, one HTML file.",
-        accent="#B3382C", metas=["Agent skill", "MIT"])),
+        owner="sjh9714", name="cover-my-repo",
+        desc="Three social preview options, checked and rendered by your coding agent. Five moods, CJK-first, local Chrome.",
+        accent="#B3382C", metas=["Local Chrome", "MIT"])),
     ("editorial-japanese", editorial, dict(
         owner="zenn-dev", name="zenn-editor",
         desc="Zenn の記事とブックを執筆するためのエディタとプレビュー環境。",
@@ -323,8 +323,8 @@ CARDS = [
         desc="科技爱好者周刊，每周五发布。记录每周值得分享的科技内容。",
         accent="#46627F", metas=["Documentation"], lang="sc")),
     ("banner-repo-cover", banner, dict(
-        owner="sjh9714", name="repo-cover",
-        desc="Social preview cards designed by your coding agent.",
+        owner="sjh9714", name="cover-my-repo",
+        desc="Three options. Five moods. One command.",
         accent="#B3382C", metas=[])),
     ("poster-archify", poster, dict(
         owner="tt-a1i", name="archify",

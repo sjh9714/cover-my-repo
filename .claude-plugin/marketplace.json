@@ -1,7 +1,7 @@
 {
   "name": "repo-cover",
   "metadata": {
-    "description": "Design GitHub social-preview cards (og:image, 1280x640) as one self-contained HTML file. Five moods, CJK-first typography, deterministic design checks, crisp PNG export."
+    "description": "Cover My Repo creates GitHub social preview options with five moods, CJK-first typography, deterministic checks, and local Chrome rendering."
   },
   "owner": {
     "name": "sjh9714"
@@ -9,6 +9,7 @@
   "plugins": [
     {
       "name": "repo-cover",
+      "displayName": "Cover My Repo",
       "source": "./"
     }
   ]

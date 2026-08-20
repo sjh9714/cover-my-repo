@@ -9,6 +9,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - id: chrome
+        uses: browser-actions/setup-chrome@v2
+      - name: Test CLI
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+        run: npm test
+      - name: Check npm package
+        run: npm pack --dry-run
       - name: Check every shipped example
         run: python3 skills/repo-cover/scripts/check_card.py skills/repo-cover/assets/examples/*.html
       - name: Rebuild examples from the generator (drift check)

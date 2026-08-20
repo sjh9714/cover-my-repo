@@ -1,4 +1,4 @@
-# Contributing
+# Contributing to Cover My Repo
 
 The fastest way to help, in order of value.
 
@@ -16,7 +16,7 @@ to see the shape. Rules for a new mood.
 - Every number pinned. Sizes, margins, opacities, accent placement.
 - Distinct silhouette. If a thumbnail of your mood could be mistaken
   for an existing one, it is a variant, not a mood.
-- Two shipped examples, both passing `scripts/check_card.py`.
+- Two shipped examples, both passing `skills/repo-cover/scripts/check_card.py`.
 - Regenerate examples with `python3 scripts/build_examples.py` from the
   repo root and commit the output. CI diffs the generator against the
   checked-in files.
@@ -31,4 +31,4 @@ way. A new check needs a card that fails it and a card that passes.
 - One mood or one fix per PR.
 - No new dependencies. The skill runs on Python stdlib and the Chrome
   the user already has.
-- Match the prose style. No em-dashes, no decorative punctuation.
+- Match the prose style. Avoid em dashes and decorative punctuation.
