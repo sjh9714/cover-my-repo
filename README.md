@@ -11,12 +11,18 @@
 ## Run it
 
 ```sh
-npx cover-my-repo
+npx cover-my-repo owner/repo
 ```
 
-Run the command inside a Git repository. It detects an authenticated Codex or
-Cursor CLI, creates three design options, renders them with your
-local Chrome, and opens a comparison preview.
+Pass any public GitHub repository. The CLI detects an authenticated Codex or
+Cursor CLI, creates three design options, renders them with your local Chrome,
+and opens a comparison preview.
+
+To use the repository in your current directory instead, run this inside it.
+
+```sh
+npx cover-my-repo
+```
 
 It uses no image model and sends no repository credentials.
 

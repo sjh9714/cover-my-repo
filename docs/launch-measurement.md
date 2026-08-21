@@ -6,7 +6,8 @@ The verified baseline before v2 was 4 GitHub stars at 2026-08-20 23:24 KST.
 | --- | --- | --- | --- | --- | --- |
 | T0 at 2026-08-20 23:46 KST |  | 0 | 4 |  |  |
 | T plus 24h |  |  |  |  |  |
-| T plus 72h |  |  |  |  |  |
+| Before Reddit at 2026-08-21 23:39 KST | 36 unique |  | 5 |  | 0 |
+| Final check at 2026-08-23 23:46 KST |  |  |  |  |  |
 
 ## Decision gates
 
@@ -15,6 +16,8 @@ Continue when v2 earns at least 25 new GitHub stars, reaching 29 total, or 3 con
 Rework the positioning when v2 earns fewer than 10 new GitHub stars, remaining below 14 total, and has no confirmed use within 72 hours.
 
 Between those outcomes, keep observing through day seven before deciding.
+
+The final 72-hour decision is due at 2026-08-23 23:46 KST.
 
 A confirmed use requires a public repository using a generated cover or a linked confirmation from its owner.
 
