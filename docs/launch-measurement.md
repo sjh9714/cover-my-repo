@@ -35,5 +35,8 @@ Tracked referral visits come from GitHub traffic referrers for the launch pages 
 | DEV | https://dev.to/sjh9714/your-ogimage-renders-tofu-cjk-safe-github-social-cards-written-by-your-coding-agent-1oon | Article updated in place |
 | Product Hunt | https://www.producthunt.com/products/repo-cover?launch=cover-my-repo | Product details and maker comment updated |
 | Reddit | https://www.reddit.com/r/coolgithubprojects/comments/1vtmaz0/i_made_a_cli_that_lets_codex_or_cursor_design/ | Visual link post live |
+| Reddit ClaudeAI | https://www.reddit.com/r/ClaudeAI/comments/1vul8v4/a_reddit_comment_found_a_prompt_injection_hole_in/ | Security write-up awaiting moderator approval |
 
 All five external updates were verified on their public pages by 2026-08-21 00:16 KST.
+
+The r/ClaudeAI post was submitted at 2026-08-22 01:32 KST. Its only immediate comment was the standard AutoModerator review notice.
