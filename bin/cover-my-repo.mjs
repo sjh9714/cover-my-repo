@@ -391,7 +391,7 @@ function previewHtml(names, repository) {
 export function renderCards({ chrome, htmlPaths, output, repository = null }) {
   const pngPaths = htmlPaths.map((htmlPath) => {
     const pngPath = join(output, `${basename(htmlPath).replace(/\.html$/, '')}.png`);
-    if (destinationExists(pngPath)) throw new Error(`Chrome output already exists ${pngPath}`);
+    if (destinationExists(pngPath)) throw new Error('Chrome output already exists ' + pngPath);
     const result = spawnSync(chrome, [
       '--headless=new',
       '--disable-dev-shm-usage',

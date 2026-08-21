@@ -4,6 +4,8 @@
 
 [한국어](README.ko.md) | [日本語](README.ja.md) | [简体中文](README.zh-CN.md)
 
+[![HOL Guard Scanner](https://img.shields.io/badge/HOL%20Guard-passing-00a67e)](https://github.com/hashgraph-online/hol-guard)
+
 ![Cover My Repo CLI demo](docs/cli-demo.gif)
 
 ## Run it
