@@ -1,6 +1,6 @@
 {
   "name": "cover-my-repo",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Generate three distinct GitHub social preview cards with Codex or Cursor.",
   "license": "MIT",
   "repository": {

@@ -34,6 +34,13 @@ Node.js 20 and Chrome are required. Upload stays manual under
 
 The CLI leaves the final GitHub upload to you.
 
+## Repository data boundary
+
+The design agent never receives README, issue, or raw manifest text. The
+parent process supplies fixed placeholders and text lengths, then inserts the
+HTML-escaped repository name and description after generation. Every card is
+checked again before Chrome renders it.
+
 ## Five moods
 
 Every example is a live page in the
