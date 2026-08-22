@@ -46,8 +46,14 @@ The CLI leaves the final GitHub upload to you.
 
 The design agent never receives README, issue, or raw manifest text. The
 parent process supplies fixed placeholders and text lengths, then inserts the
-HTML-escaped repository name and description after generation. Every card is
-checked again before Chrome renders it.
+HTML-escaped repository name and description after generation.
+
+The CLI resolves Codex, Cursor, Git, Chrome, and the system opener outside the
+target repository. Codex runs read-only with shell and file tools disabled.
+Cursor runs in Ask mode inside an empty temporary workspace. Both return a
+bounded JSON object instead of writing files. The parent process accepts only
+the bundled Google Fonts stylesheet and inline PNG data, adds a restrictive
+content security policy, and checks every card before Chrome renders it.
 
 ## Five moods
 

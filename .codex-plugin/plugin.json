@@ -1,7 +1,7 @@
 {
   "name": "repo-cover",
   "description": "Design one GitHub social preview card with five moods, CJK-first typography, deterministic checks, and local Chrome export.",
-  "version": "2.0.0",
+  "version": "2.0.2",
   "author": {
     "name": "sjh9714",
     "url": "https://github.com/sjh9714"
